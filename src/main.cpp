@@ -27,6 +27,9 @@ public:
 	PROJECT_NAME(const OP_NodeInfo* info)
 	{}
 
+	//PROJECT_NAME(const OP_NodeInfo* info, TOP_Context *context)
+	//{}
+
 	virtual ~PROJECT_NAME()
 	{}
 
@@ -75,7 +78,7 @@ extern "C"
 	{
 		TOP_PluginInfo info;
 		info.apiVersion = TOPCPlusPlusAPIVersion;
-		info.executeMode = TOP_ExecuteMode::CPUMemWriteOnly
+		info.executeMode = TOP_ExecuteMode::CPUMemWriteOnly;
 		//info.executeMode = TOP_ExecuteMode::OpenGL_FBO;
 		return info;
 	}

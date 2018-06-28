@@ -74,3 +74,24 @@ public:
 
 };
 ```
+
+### 5. Update `.vs/launch.vs.json` for Build and Run
+
+Replace `TestCHOP` to `MyTestCHOP` (Project Name defined at `CMakeLists.txt`)
+
+```json
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "dll",
+      "exe": "c:\\Program Files\\Derivative\\TouchDesigner099\\bin\\TouchDesigner099.exe",
+      "args": [ "${workspaceRoot}\\out\\test.toe" ],
+      "project": "CMakeLists.txt",
+      "projectTarget": "MyTestCHOP.dll (S:\\cmaketest\\out\\MyTestCHOP.dll)",
+      "name": "MyTestCHOP.dll (S:\\cmaketest\\out\\MyTestCHOP.dll)"
+    }
+  ]
+}
+```
