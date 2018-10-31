@@ -654,7 +654,6 @@ public:
 	virtual const OP_DATInput*		getDAT(const char *path) = 0;
 	virtual const OP_TOPInput*		getTOP(const char *path) = 0;
 	virtual const OP_CHOPInput*		getCHOP(const char *path) = 0;
-	virtual const OP_SOPInput*		getSOP(const char *path) = 0;
 	virtual const OP_ObjectInput*	getObject(const char *path) = 0;
 
 
@@ -674,6 +673,7 @@ public:
 	virtual const OP_SOPInput*		getParSOP(const char *name) = 0;
 	// only valid for C++ SOP operators
 	virtual const OP_SOPInput*		getInputSOP(int32_t index) = 0;
+	virtual const OP_SOPInput*		getSOP(const char *path) = 0;
 
 };
 

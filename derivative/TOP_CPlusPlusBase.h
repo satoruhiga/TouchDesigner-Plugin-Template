@@ -38,6 +38,15 @@
 class TOP_CPlusPlusBase;
 class TOP_Context;
 
+#ifndef WIN32
+	#ifdef __OBJC__
+		@class NSOpenGLContext;
+	#else
+		class NSOpenGLContext;
+	#endif
+#endif
+
+
 enum class TOP_ExecuteMode : int32_t
 { 
 	// Rendering is done using OpenGL into a FBO/RenderBuffers
@@ -348,6 +357,27 @@ public:
 	virtual GLuint	getFBOIndex() = 0;
 
 	/*** END: New TOP_ExecuteMode::OpenGL_FBO execudeMode specific functions ***/
+
+#ifdef WIN32
+	// This will return the device context used to create rendering contexts
+	// for this instance of TouchDesigner. In the case where GPU affinity
+	// is being used, using this to create extra contexts will ensure those
+	// contexts are affine to the correct GPU.
+	// If not null, pixelFormatOut will be filled with the pixel format
+	// index used for the DC.
+	virtual HDC		getDC(int *pixelFormatOut) const = 0;
+
+	// This will return the context that should be used if you are going to setup
+	// sharing between a context you are creating and the contexts TouchDesigner
+	// is using.
+	virtual HGLRC	getShareRenderContext() const = 0;
+#else
+
+	// This will return the context that should be used if you are going to setup
+	// sharing between a context you are creating and the contexts TouchDesigner
+	// is using.
+	virtual NSOpenGLContext*	getShareRenderContext() const = 0;
+#endif
 };
 
 
