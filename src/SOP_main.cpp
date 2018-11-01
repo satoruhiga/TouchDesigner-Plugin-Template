@@ -16,9 +16,21 @@ public:
 	{}
 
 	void execute(SOP_Output* output, OP_Inputs* inputs, void* reserved) override
-	{}
+	{
+		int N = 32;
 
-	void executeVBO(SOP_VBOOutput*, OP_Inputs*, void* reserved) override
+		for (int i = 0; i < N; i++)
+		{
+			float d = (float)i / (N - 1);
+
+			float x = sin(d * 3.1415 * 2);
+			float y = cos(d * 3.1415 * 2);
+
+			output->addPoint(x, y, 0);
+		}
+	}
+
+	void executeVBO(SOP_VBOOutput* output, OP_Inputs*, void* reserved) override
 	{}
 
 };
