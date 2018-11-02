@@ -20,7 +20,7 @@ public:
 		ginfo->memPixelType = OP_CPUMemPixelType::RGBA8Fixed;
 	}
 
-	bool getOutputFormat(TOP_OutputFormat* format)
+	bool getOutputFormat(TOP_OutputFormat* format) override
 	{
 		return false;
 	}

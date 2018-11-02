@@ -13441,7 +13441,7 @@ GLboolean glewParseArgs (int argc, char** argv, struct createParams *params)
     if (!strcmp(argv[p], "-version"))
     {
       if (++p >= argc) return GL_TRUE;
-      if (sscanf_s(argv[p++], "%d.%d", &params->major, &params->minor) != 2) return GL_TRUE;
+      if (sscanf(argv[p++], "%d.%d", &params->major, &params->minor) != 2) return GL_TRUE;
     }
     else if (!strcmp(argv[p], "-profile"))
     {
