@@ -15,6 +15,9 @@ public:
 	virtual ~PROJECT_NAME()
 	{}
 
+	void setupParameters(OP_ParameterManager* manager) override
+	{}
+
 	bool getOutputInfo(CHOP_OutputInfo* info) override
 	{
 		info->numSamples = 600;
@@ -23,7 +26,7 @@ public:
 		return true;
 	}
 
-	const char*	getChannelName(int32_t index, void* reserved) override
+	const char* getChannelName(int32_t index, void* reserved) override
 	{
 		return "chan1";
 	}

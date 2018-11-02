@@ -15,6 +15,9 @@ public:
 	virtual ~PROJECT_NAME()
 	{}
 
+	void setupParameters(OP_ParameterManager* manager) override
+	{}
+
 	void execute(SOP_Output* output, OP_Inputs* inputs, void* reserved) override
 	{
 		int N = 32;

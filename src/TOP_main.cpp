@@ -15,6 +15,9 @@ public:
 	virtual ~PROJECT_NAME()
 	{}
 
+	void setupParameters(OP_ParameterManager* manager) override
+	{}
+
 	void getGeneralInfo(TOP_GeneralInfo* ginfo) override
 	{
 		ginfo->memPixelType = OP_CPUMemPixelType::RGBA8Fixed;
