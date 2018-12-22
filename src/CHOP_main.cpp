@@ -18,6 +18,9 @@ public:
 	void setupParameters(OP_ParameterManager* manager) override
 	{}
 
+	void getGeneralInfo(CHOP_GeneralInfo* info) override
+	{}
+
 	bool getOutputInfo(CHOP_OutputInfo* info) override
 	{
 		info->numSamples = 600;

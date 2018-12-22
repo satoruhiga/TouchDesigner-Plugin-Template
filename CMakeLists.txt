@@ -8,6 +8,10 @@ set(OPERATOR_TYPE_CHOP 1)
 set(OPERATOR_TYPE_TOP 0)
 set(OPERATOR_TYPE_SOP 0)
 
+include_directories(
+	"src"
+)
+
 file(GLOB SRC
 	"src/*.cpp"
 	"src/*.c"
@@ -44,3 +48,14 @@ target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARY})
 set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/out)
 set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_COMMAND "C:/Program Files/Derivative/TouchDesigner099/bin/TouchDesigner099.exe")
 set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "test.toe")
+
+### hot-reloading using OSC message (`oscer` https://github.com/aike/oscer)
+
+if (APPLE)
+	set(OSCER "${CMAKE_CURRENT_SOURCE_DIR}/bin/MacOSX/oscer")
+elseif(WIN32)
+	set(OSCER "${CMAKE_CURRENT_SOURCE_DIR}/bin/Windows64/oscer.exe")
+endif()
+
+add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD COMMAND ${OSCER} ARGS localhost 23423 /unload)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${OSCER} ARGS localhost 23423 /load)
