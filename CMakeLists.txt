@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 ###
 
-project(TestCHOP)
+project(TestOP)
 
 set(OPERATOR_TYPE_CHOP 1)
 set(OPERATOR_TYPE_TOP 0)
@@ -10,15 +10,20 @@ set(OPERATOR_TYPE_SOP 0)
 
 include_directories(
 	"src"
+	"derivative"
+	"derivative/GL"
 )
+
+link_directories(
+)
+
+set(LINK_LIBRARIES "")
 
 file(GLOB SRC
 	"src/*.cpp"
 	"src/*.c"
 	"derivative/GL/*.c"
 )
-
-include_directories(src derivative derivative/GL)
 
 ###
 
@@ -43,7 +48,7 @@ add_definitions(-DOPERATOR_TYPE_TOP=${OPERATOR_TYPE_TOP})
 add_definitions(-DOPERATOR_TYPE_SOP=${OPERATOR_TYPE_SOP})
 
 find_package(OpenGL REQUIRED)
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARY})
+target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARY} ${LINK_LIBRARIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/out)
 set_target_properties(${PROJECT_NAME} PROPERTIES VS_DEBUGGER_COMMAND "C:/Program Files/Derivative/TouchDesigner099/bin/TouchDesigner099.exe")
