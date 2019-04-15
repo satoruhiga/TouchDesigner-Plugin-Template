@@ -3,3 +3,6 @@
 out
 CMakeSettings.json
 build
+
+libs
+src/aruco

@@ -2,22 +2,24 @@ cmake_minimum_required(VERSION 2.8)
 
 ###
 
-project(TestOP)
+project(ViveSR_TOP)
 
-set(OPERATOR_TYPE_CHOP 1)
-set(OPERATOR_TYPE_TOP 0)
+set(OPERATOR_TYPE_CHOP 0)
+set(OPERATOR_TYPE_TOP 1)
 set(OPERATOR_TYPE_SOP 0)
 
 include_directories(
 	"src"
 	"derivative"
 	"derivative/GL"
+	${CMAKE_CURRENT_SOURCE_DIR}/libs/include
 )
 
 link_directories(
+	${CMAKE_CURRENT_SOURCE_DIR}/libs/lib
 )
 
-set(LINK_LIBRARIES "")
+set(LINK_LIBRARIES "ViveSR_API.lib")
 
 file(GLOB SRC
 	"src/*.cpp"
