@@ -13,18 +13,24 @@ include_directories(
 	"derivative"
 	"derivative/GL"
 	${CMAKE_CURRENT_SOURCE_DIR}/libs/include
+	"src/aruco/src/"
+	"src/aruco/include/"
 )
 
 link_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/libs/lib
 )
 
-set(LINK_LIBRARIES "ViveSR_API.lib")
+set(LINK_LIBRARIES
+	"ViveSR_API.lib"
+	"opencv_world310.lib"
+)
 
 file(GLOB SRC
 	"src/*.cpp"
 	"src/*.c"
 	"derivative/GL/*.c"
+	"src/aruco/src/*.cpp"
 )
 
 ###
