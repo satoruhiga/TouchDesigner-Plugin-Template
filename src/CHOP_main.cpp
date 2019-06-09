@@ -15,13 +15,13 @@ public:
 	virtual ~PROJECT_NAME()
 	{}
 
-	void setupParameters(OP_ParameterManager* manager) override
+	void setupParameters(OP_ParameterManager* manager, void* reserved1) override
 	{}
 
-	void getGeneralInfo(CHOP_GeneralInfo* info) override
+	void getGeneralInfo(CHOP_GeneralInfo* info, const OP_Inputs *inputs, void* reserved1) override
 	{}
 
-	bool getOutputInfo(CHOP_OutputInfo* info) override
+	bool getOutputInfo(CHOP_OutputInfo* info, const OP_Inputs *inputs, void *reserved1) override
 	{
 		info->numSamples = 600;
 		info->numChannels = 1;
@@ -29,12 +29,13 @@ public:
 		return true;
 	}
 
-	const char* getChannelName(int32_t index, void* reserved) override
+	void getChannelName(int32_t index, OP_String *name,
+		const OP_Inputs *inputs, void* reserved1) override
 	{
-		return "chan1";
+		name->setString("chan1");
 	}
 
-	void execute(const CHOP_Output* output, OP_Inputs* inputs, void*) override
+	void execute(CHOP_Output* output, const OP_Inputs* inputs, void* reserved1) override
 	{
 		for (int i = 0; i < output->numSamples; i++)
 		{
@@ -48,9 +49,28 @@ public:
 
 extern "C"
 {
-	DLLEXPORT int32_t GetCHOPAPIVersion(void)
+	DLLEXPORT void FillCHOPPluginInfo(CHOP_PluginInfo *info)
 	{
-		return CHOP_CPLUSPLUS_API_VERSION;
+		// Always set this to CHOPCPlusPlusAPIVersion.
+		info->apiVersion = CHOPCPlusPlusAPIVersion;
+
+		// The opType is the unique name for this CHOP. It must start with a 
+		// capital A-Z character, and all the following characters must lower case
+		// or numbers (a-z, 0-9)
+		info->customOPInfo.opType->setString("Testop");
+
+		// The opLabel is the text that will show up in the OP Create Dialog
+		info->customOPInfo.opLabel->setString("Test OP");
+
+		// Information about the author of this OP
+		info->customOPInfo.authorName->setString("Author Name");
+		info->customOPInfo.authorEmail->setString("email@email.com");
+
+		// This CHOP can work with 0 inputs
+		info->customOPInfo.minInputs = 0;
+
+		// It can accept up to 1 input though, which changes it's behavior
+		info->customOPInfo.maxInputs = 1;
 	}
 
 	DLLEXPORT CHOP_CPlusPlusBase* CreateCHOPInstance(const OP_NodeInfo* info)

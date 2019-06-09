@@ -1005,45 +1005,6 @@ public:
 
 };
 
-class OP_TimeInfo
-{
-public:
-
-	// same as global Python value absTime.frame. Counts up forever
-	// since the application started. In rootFPS units.
-	int64_t	absFrame;
-
-	// The timeline frame number for this cook
-	double	frame;
-
-	// The timeline FPS/rate this node is cooking at.
-	// If the component this node is located in has Component Time, it's FPS
-	// may be different than the Root FPS
-	double	rate;
-
-	// The frame number for the root timeline. Different than frame
-	// if the node is in a component that has component time.
-	double 	rootFrame;
-
-	// The Root FPS/Rate the file is running at.
-	double	rootRate;
-
-	// The number of frames that have elapsed since the last cook occured.
-	// This can be more than one if frames were dropped.
-	// If this is the first time this node is cooking, this will be 0.0
-	// This is in 'rate' units, not 'rootRate' units.
-	double	deltaFrames;
-
-	// The number of milliseconds that have elapsed since the last cook.
-	// Note that this isn't done via CPU timers, but is instead 
-	// simply deltaFrames * milliSecondsPerFrame
-	double	deltaMS;
-
-
-
-	int32_t	reserved[40];
-};
-
 
 class OP_Inputs
 {
@@ -1052,17 +1013,13 @@ public:
 	// be called inside a beginGLCommands()/endGLCommands() section
 	// as they may require GL themselves to complete execution.
 
-	// Inputs that are wired into the node. Note that since some inputs
-	// may not be connected this number doesn't mean that that the first N
-	// inputs are connected. For example on a 3 input node if the 3rd input
-	// is only one connected, this will return 1, and getInput*(0) and (1)
-	// will return nullptr.
+	// these are wired into the node
 	virtual int32_t		getNumInputs() const = 0;
 
-	// Will return nullptr when the input has nothing connected to it.
+	// may return nullptr when invalid input
 	// only valid for C++ TOP operators
 	virtual const OP_TOPInput*		getInputTOP(int32_t index) const = 0;
-	// Only valid for C++ CHOP operators
+	// only valid for C++ CHOP operators
 	virtual const OP_CHOPInput*		getInputCHOP(int32_t index) const = 0;
 	// getInputSOP() declared later on in the class
 	// getInputDAT() declared later on in the class
@@ -1156,12 +1113,6 @@ public:
 	// So increment it if you want to hold onto the object, and only
 	// decement it if you've incremented it.
 	virtual PyObject*				getParPython(const char* name) const = 0;
-
-
-	// Returns a class whose members gives you information about timing
-	// such as FPS and delta-time since the last cook.
-	// See OP_TimeInfo for more information
-	virtual const OP_TimeInfo*		getTimeInfo() const = 0;
 
 };
 
@@ -1489,5 +1440,4 @@ static_assert(offsetof(OP_StringParameter, label) == 8, "Incorrect Alignment");
 static_assert(offsetof(OP_StringParameter, page) == 16, "Incorrect Alignment");
 static_assert(offsetof(OP_StringParameter, defaultValue) == 24, "Incorrect Alignment");
 static_assert(sizeof(OP_StringParameter) == 112, "Incorrect Size");
-static_assert(sizeof(OP_TimeInfo) == 216, "Incorrect Size");
 #endif
