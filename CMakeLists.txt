@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 2.8)
 
 ###
 
-project(ViveSR_TOP)
+project(MyOperator)
 
-set(OPERATOR_TYPE_CHOP 0)
-set(OPERATOR_TYPE_TOP 1)
+set(OPERATOR_TYPE_CHOP 1)
+set(OPERATOR_TYPE_TOP 0)
 set(OPERATOR_TYPE_SOP 0)
 
 include_directories(
@@ -13,8 +13,6 @@ include_directories(
 	"derivative"
 	"derivative/GL"
 	${CMAKE_CURRENT_SOURCE_DIR}/libs/include
-	"src/aruco/src/"
-	"src/aruco/include/"
 )
 
 link_directories(
@@ -22,15 +20,12 @@ link_directories(
 )
 
 set(LINK_LIBRARIES
-	"ViveSR_API.lib"
-	"opencv_world310.lib"
 )
 
 file(GLOB SRC
 	"src/*.cpp"
 	"src/*.c"
 	"derivative/GL/*.c"
-	"src/aruco/src/*.cpp"
 )
 
 ###

@@ -33,12 +33,13 @@
 #ifndef __TOP_CPlusPlusBase__
 #define __TOP_CPlusPlusBase__
 
+#include "assert.h"
 #include "CPlusPlus_Common.h"
 
 class TOP_CPlusPlusBase;
 class TOP_Context;
 
-#ifndef WIN32
+#ifndef _WIN32
 	#ifdef __OBJC__
 		@class NSOpenGLContext;
 	#else
@@ -84,23 +85,33 @@ enum class TOP_ExecuteMode : int32_t
 // from the samples folder in a newer TouchDesigner installation.
 // You may need to upgrade your plugin code in that case, to match
 // the new API requirements
-const int TOPCPlusPlusAPIVersion = 8;
+const int TOPCPlusPlusAPIVersion = 10;
 
 struct TOP_PluginInfo
 {
-	int32_t			apiVersion;
+public:
+	// Must be set to TOPCPlusPlusAPIVersion in FillTOPPluginInfo
+	int32_t			apiVersion = 0;
 
 	// Set this to control the execution mode for this plugin
-	// See the documention atin TOP_ExecuteMode for more information
-	TOP_ExecuteMode	executeMode;
+	// See the documention for TOP_ExecuteMode for more information
+	TOP_ExecuteMode	executeMode = TOP_ExecuteMode::OpenGL_FBO;
 
-	int32_t			reserved[40];
+private:
+	int32_t			reserved[100];
+
+public:
+	// Information used to describe this plugin as a custom OP.
+	OP_CustomOPInfo	customOPInfo;
+
+private:
+	int32_t			reserved2[20];
 
 };
 
 // These are the definitions for the C-functions that are used to
 // load the library and create instances of the object you define
-typedef TOP_PluginInfo (__cdecl *GETTOPPLUGININFO)(void);
+typedef void (__cdecl *FILLTOPPLUGININFO)(TOP_PluginInfo* info);
 typedef TOP_CPlusPlusBase* (__cdecl *CREATETOPINSTANCE)(const OP_NodeInfo*,
 														TOP_Context*);
 typedef void (__cdecl *DESTROYTOPINSTANCE)(TOP_CPlusPlusBase*, TOP_Context*);
@@ -179,7 +190,6 @@ public:
 
 	int32_t			stencilBits;
 
-private:
 	int32_t			reserved[20];
 };
 
@@ -189,28 +199,28 @@ private:
 class TOP_OutputFormatSpecs
 {
 public:
-	int32_t			width;
-	int32_t			height;
-	float			aspectX;
-	float			aspectY;
+	const int32_t	width;
+	const int32_t	height;
+	const float		aspectX;
+	const float		aspectY;
 
-	int32_t			antiAlias;
+	const int32_t	antiAlias;
 
-    int32_t			redBits;
-    int32_t			blueBits;
-    int32_t			greenBits;
-    int32_t			alphaBits;
-    bool			floatPrecision;
+    const int32_t	redBits;
+    const int32_t	blueBits;
+    const int32_t	greenBits;
+    const int32_t	alphaBits;
+    const bool		floatPrecision;
 
     /*** BEGIN: TOP_ExcuteMode::OpenGL_FBO and CUDA executeMode specific ***/
-	int32_t			numColorBuffers;
+	const int32_t	numColorBuffers;
 
-	int32_t			depthBits;
-	int32_t			stencilBits;
+	const int32_t	depthBits;
+	const int32_t	stencilBits;
 
 
 	// The OpenGL internal format of the output texture. E.g GL_RGBA8, GL_RGBA32F
-	GLint			pixelFormat; 
+	const GLint		pixelFormat; 
     /*** END: TOP_ExecuteMode::OpenGL_FBO and CUDA executeMode specific ***/
 
 
@@ -229,7 +239,7 @@ public:
 	// valid though.
 	// This means you can hold onto these pointers by default and use them
 	// after execute() returns, such as filling them in another thread.
-    void*           cpuPixelData[3];
+    void* const		cpuPixelData[3];
 
     // setting this to 0 will upload memory from cpuPixelData[0],
     // setting this to 1 will upload memory from cpuPixelData[1]
@@ -238,7 +248,7 @@ public:
     // setting this to -1 will not upload any memory and retain previously uploaded texture
     // setting this to any other value will result in an error being displayed in the CPlusPlus TOP.
     // defaults to -1
-    mutable int32_t    newCPUPixelDataLocation;
+    int32_t			newCPUPixelDataLocation;
 
     /*** END: CPU_MEM_* executeMode specific ***/
 
@@ -249,26 +259,26 @@ public:
 	// The first color can either be a GL_TEXTURE_2D or a GL_RENDERBUFFER
 	// depending on the settings. This will be set to either
 	// GL_TEXTURE_2D or GL_RENDERBUFFER accordingly
-	GLenum			colorBuffer0Type;
+	const GLenum	colorBuffer0Type;
 
 	// The indices for the renderBuffers for the color buffers that are attached to the FBO, except for possibly index 0 (see colorBuffer0Type)
 	// these are all GL_RENDERBUFFER GL objects, or 0 if not present
-	GLuint			colorBufferRB[32];
+	const GLuint	colorBufferRB[32];
 	
 	// The renderBuffer for the depth buffer that is attached to the FBO
 	// This is always a GL_RENDERBUFFER GL object
-	GLuint 			depthBufferRB;
+	const GLuint 	depthBufferRB;
 
     /*** END: TOP_ExecuteMode::OpenGL_FBO executeMode specific ***/
 
 	/*** BEGIN: TOP_ExecuteMode::CUDA specific ***/
 	// Write to this CUDA memory to fill the output textures
-	cudaArray*		cudaOutput[32];
+	cudaArray* const cudaOutput[32];
 
 	/*** END: TOP_ExecuteMode::CUDA specific ***/
-private:
-	int32_t			reserved[10];
+	const int32_t	reserved[10];
 };
+
 
 class TOP_GeneralInfo
 {
@@ -318,7 +328,6 @@ public:
 	// Other cases are listed in the CPUMemPixelType enumeration
 	OP_CPUMemPixelType	memPixelType;
 
-private:
 	int32_t			reserved[18];
 };
 
@@ -358,7 +367,7 @@ public:
 
 	/*** END: New TOP_ExecuteMode::OpenGL_FBO execudeMode specific functions ***/
 
-#ifdef WIN32
+#ifdef _WIN32
 	// This will return the device context used to create rendering contexts
 	// for this instance of TouchDesigner. In the case where GPU affinity
 	// is being used, using this to create extra contexts will ensure those
@@ -434,9 +443,10 @@ public:
 
 	// Some general settings can be assigned here by setting memebers of
 	// the TOP_GeneralInfo class that is passed in
-	virtual void		getGeneralInfo(TOP_GeneralInfo*)
-						{
-						}
+	virtual void
+	getGeneralInfo(TOP_GeneralInfo*, const OP_Inputs*, void *reserved1)
+	{
+	}
 
 
 	// This function is called so the class can tell the TOP what
@@ -448,107 +458,104 @@ public:
 	// The TOP_OutputFormat class is pre-filled with what the TOP would
 	// output if you return false, so you can just tweak a few settings
 	// and return true if you want
-
-	virtual bool		getOutputFormat(TOP_OutputFormat*)
-						{
-							return false;
-						}
+	virtual bool
+	getOutputFormat(TOP_OutputFormat*, const OP_Inputs*, void* reserved1)
+	{
+		return false;
+	}
 
 	// In this function you do whatever you want to fill the framebuffer
 	// 
 	// See the OP_Inputs class definition for more details on it's
 	// contents
 
-	virtual void		execute(const TOP_OutputFormatSpecs*,
-								OP_Inputs* ,
-								TOP_Context* context) = 0;
+	virtual void		execute(TOP_OutputFormatSpecs*,
+								const OP_Inputs* ,
+								TOP_Context* context,
+								void* reserved1) = 0;
 
 
 	// Override these methods if you want to output values to the Info CHOP/DAT
 	// returning 0 means you dont plan to output any Info CHOP channels
 
-	virtual int32_t		getNumInfoCHOPChans()
-						{
-							return 0;
-						}
+	virtual int32_t		
+	getNumInfoCHOPChans(void* reserved1)
+	{
+		return 0;
+	}
 
-	// Specify the name and value for CHOP 'index',
+	// Specify the name and value for Info CHOP channel 'index',
 	// by assigning something to 'name' and 'value' members of the
-	// OP_InfoCHOPChan class pointer that is passed (it points
-	// to a valid instance of the class already.
-	// the 'name' pointer will initially point to nullptr
-	// you must allocate memory or assign a constant string
-	// to it.
-
-	virtual void		getInfoCHOPChan(int32_t index,
-										OP_InfoCHOPChan* chan)
-						{
-						}
+	// OP_InfoCHOPChan class pointer that is passed in.
+	virtual void
+	getInfoCHOPChan(int32_t index, OP_InfoCHOPChan* chan,
+										void* reserved1)
+	{
+	}
 
 
 	// Return false if you arn't returning data for an Info DAT
 	// Return true if you are.
 	// Fill in members of the OP_InfoDATSize class to specify the size
-
-	virtual bool		getInfoDATSize(OP_InfoDATSize* infoSize)
-						{
-							return false;
-						}
+	virtual bool
+	getInfoDATSize(OP_InfoDATSize* infoSize, void* reserved1)
+	{
+		return false;
+	}
 
 	// You are asked to assign values to the Info DAT 1 row or column at a time
 	// The 'byColumn' variable in 'getInfoDATSize' is how you specify
 	// if it is by column or by row.
 	// 'index' is the row/column index
 	// 'nEntries' is the number of entries in the row/column
-
-	virtual void		getInfoDATEntries(int32_t index,
-											int32_t nEntries,
-											OP_InfoDATEntries* entries)
-						{
-						}
+	// Strings should be UTF-8 encoded.
+	virtual void
+	getInfoDATEntries(int32_t index, int32_t nEntries,
+											OP_InfoDATEntries* entries,
+											void *reserved1)
+	{
+	}
 
 	// You can use this function to put the node into a warning state
 	// with the returned string as the message.
-	// Return nullptr if you don't want it to be in a warning state.
-	virtual const char* getWarningString()
-						{
-							return nullptr;
-						}
+	virtual void
+	getWarningString(OP_String *warning, void *reserved1)
+	{
+	}
 
 	// You can use this function to put the node into a error state
 	// with the returned string as the message.
-	// Return nullptr if you don't want it to be in a error state.
-	virtual const char* getErrorString()
-						{
-							return nullptr;
-						}
+	virtual void
+	getErrorString(OP_String *error, void *reserved1)
+	{
+	}
 
 	// Use this function to return some text that will show up in the
 	// info popup (when you middle click on a node)
-	// Return nullptr if you don't want to return anything.
-	virtual const char* getInfoPopupString()
-						{
-							return nullptr;
-						}
+	virtual void
+	getInfoPopupString(OP_String *info, void *reserved1)
+	{
+	}
 
 
 
 	// Override these methods if you want to define specfic parameters
-	virtual void		setupParameters(OP_ParameterManager* manager)
-						{
-						}
+	virtual void
+	setupParameters(OP_ParameterManager* manager, void* reserved1)
+	{
+	}
 
 
 	// This is called whenever a pulse parameter is pressed
-	virtual void		pulsePressed(const char* name)
-						{
-						}
+	virtual void		
+	pulsePressed(const char* name, void* reserved1)
+	{
+	}
 
 
 	// END PUBLIC INTERFACE
 				
 
-private:
 
 	// Reserved for future features
 	virtual int32_t	reservedFunc6() { return 0; }
@@ -570,5 +577,58 @@ private:
 	int32_t			reserved[400];
 
 };
+
+static_assert(offsetof(TOP_PluginInfo, apiVersion) == 0, "Incorrect Alignment");
+static_assert(offsetof(TOP_PluginInfo, executeMode) == 4, "Incorrect Alignment");
+static_assert(offsetof(TOP_PluginInfo, customOPInfo) == 408, "Incorrect Alignment");
+static_assert(sizeof(TOP_PluginInfo) == 944, "Incorrect Size");
+
+static_assert(offsetof(TOP_OutputFormatSpecs, width) == 0, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, height) == 4, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, aspectX) == 8, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, aspectY) == 12, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, antiAlias) == 16, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, redBits) == 20, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, blueBits) == 24, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, greenBits) == 28, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, alphaBits) == 32, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, floatPrecision) == 36, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, numColorBuffers) == 40, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, depthBits) == 44, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, stencilBits) == 48, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, pixelFormat) == 52, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, cpuPixelData) == 56, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, newCPUPixelDataLocation) == 80, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, colorBuffer0Type) == 84, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, colorBufferRB) == 88, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, depthBufferRB) == 216, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormatSpecs, cudaOutput) == 224, "Incorrect Aligment");
+static_assert(sizeof(TOP_OutputFormatSpecs) == 520, "Incorrect Size");
+
+static_assert(offsetof(TOP_GeneralInfo, cookEveryFrame) == 0, "Incorrect Aligment");
+static_assert(offsetof(TOP_GeneralInfo, clearBuffers) == 1, "Incorrect Aligment");
+static_assert(offsetof(TOP_GeneralInfo, mipmapAllTOPs) == 2, "Incorrect Aligment");
+static_assert(offsetof(TOP_GeneralInfo, cookEveryFrameIfAsked) == 3, "Incorrect Aligment");
+static_assert(offsetof(TOP_GeneralInfo, inputSizeIndex) == 4, "Incorrect Aligment");
+static_assert(offsetof(TOP_GeneralInfo, reservedForLegacy1) == 8, "Incorrect Aligment");
+static_assert(offsetof(TOP_GeneralInfo, memPixelType) == 12, "Incorrect Aligment");
+static_assert(sizeof(TOP_GeneralInfo) == 88, "Incorrect Aligment");
+
+
+static_assert(offsetof(TOP_OutputFormat, width) == 0, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormat, height) == 4, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormat, aspectX) == 8, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormat, aspectY) == 12, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormat, antiAlias) == 16, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormat, redChannel) == 20, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormat, greenChannel) == 21, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormat, blueChannel) == 22, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormat, alphaChannel) == 23, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormat, bitsPerChannel) == 24, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormat, floatPrecision) == 28, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormat, numColorBuffers) == 32, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormat, depthBits) == 36, "Incorrect Aligment");
+static_assert(offsetof(TOP_OutputFormat, stencilBits) == 40, "Incorrect Aligment");
+static_assert(sizeof(TOP_OutputFormat) == 124, "Incorrect Size");
 
 #endif

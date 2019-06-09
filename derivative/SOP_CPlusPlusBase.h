@@ -32,18 +32,44 @@
 #ifndef __SOP_CPlusPlusBase__
 #define __SOP_CPlusPlusBase__
 
+#include <assert.h>
 #include "CPlusPlus_Common.h"
 
-#define SOP_CPLUSPLUS_API_VERSION	1
-
 class SOP_CPlusPlusBase;
+struct SOP_PluginInfo;
 
 
 // These are the definitions for the C-functions that are used to
 // load the library and create instances of the object you define
-typedef int32_t(__cdecl *GETSOPAPIVERSION)(void);
+typedef void(__cdecl *FILLSOPPLUGININFO)(SOP_PluginInfo *info);
 typedef SOP_CPlusPlusBase* (__cdecl *CREATESOPINSTANCE)(const OP_NodeInfo*);
 typedef void(__cdecl *DESTROYSOPINSTANCE)(SOP_CPlusPlusBase*);
+
+// Define for the current API version that this sample code is made for.
+// To upgrade to a newer version, replace the files
+// SOP_CPlusPlusBase.h
+// CPlusPlus_Common.h
+// from the samples folder in a newer TouchDesigner installation.
+// You may need to upgrade your plugin code in that case, to match
+// the new API requirements
+const int SOPCPlusPlusAPIVersion = 2;
+
+struct SOP_PluginInfo
+{
+public:
+	int32_t			apiVersion = 0;
+
+private:
+	int32_t			reserved[100];
+
+public:
+	// Information used to describe this plugin as a custom OP.
+	OP_CustomOPInfo	customOPInfo;
+
+private:
+	int32_t			reserved2[20];
+};
+
 
 
 class SOP_GeneralInfo
@@ -74,7 +100,6 @@ public:
 
 
 private:
-
 	int32_t	reserved[20];
 };
 
@@ -86,10 +111,17 @@ private:
 enum  class VBOBufferMode : int32_t
 {
 	// The data will be modified once or rarely and used many times.
-	Static = 0,  
+	Static = 0,
 
 	// The data will be modified repeatedly and used many times.
 	Dynamic,
+};
+
+// an enumerator to specify the group type
+enum  class SOP_GroupType
+{
+	Point = 0,
+	Primitive,
 };
 
 
@@ -107,50 +139,66 @@ public:
 	{
 	}
 
-
-	// Add multiple points at specified positions.
-	// The 'positions' array holds the of x, y, and z of input points.
-	// 'numPoints' is the number of points to be added. 
-	// 'positions' must have at least 3 * numPoints elements.
-	virtual void	addPoints(const float *positions, int32_t numPoints) = 0;
-
 	// Add a single point at the given position.
 	// Returns the point's index.
-	virtual int32_t	addPoint(float x, float y, float z) = 0;
+	virtual int32_t	addPoint(const Position& pos) = 0;
+
+	// Add multiple points at specified positions.
+	// 'numPoints' is the number of points to be added. 
+	virtual bool	addPoints(const Position* pos, int32_t numPoints) = 0;
+
+	// Returns the number of added points at the time of query
+	virtual	int32_t	getNumPoints() = 0;
 
 	// Set the normal vector for the point with the 'pointIdx'.
 	// The point must already exist by via calling addPoints() or addPoint().
-	virtual void	setNormal(float x, float y, float z, int32_t pointIdx) = 0;
+	virtual bool	setNormal(const Vector& n, int32_t pointIdx) = 0;
 
 	// Set the normal vectors for existing points.
 	// Note that has been the points must be already added by calling addPoints() or addPoint().
-	// 'normals' must be an array of XYZ values, with size at least 3*numPoints.
 	// The startPointIdx indicates the start index of the points to set normals for.
-	virtual bool	setNormals(const float *normals, int32_t numPoints, int32_t startPointIdx) = 0;
+	virtual bool	setNormals(const Vector* n, int32_t numPoints, int32_t startPointIdx) = 0;
 
-	// Set the color value with r,g,b,a for the point with 'pointIdx' index.
+	// Returns true if the normal has been set for this geometry.
+	virtual bool	hasNormal() = 0;
+
+	// Set the color value with Color (i.e. r,g,b,a) for the point with 'pointIdx' index.
 	// The point must already exist by via calling addPoints() or addPoint().
-	virtual void	setColor(float r, float g, float b, float a, int32_t pointIdx) = 0;
+	virtual bool	setColor(const Color& c, int32_t pointIdx) = 0;
 
 	// Set the colors for points that are already added.
-	// 'colors' must be an array of RGBA values, with size at least 4*numPoints.
 	// The startPointIdx indicates the start index of the points to set colors for.
-	virtual bool	setColors(const float *colors, int32_t numPoints, int32_t startPointIdx) = 0;
+	virtual bool	setColors(const Color* colors, int32_t numPoints, int32_t startPointIdx) = 0;
 
-
-	// Set the custom attribute with it's name, number of components, and it's type
-	// The data param must hold the data for the custom attribute.
-	// E.g a custom atrrib with 4 components for each point should holds 4*numPoints values.
-	virtual void	setCustomAttribute(const char *name, int32_t numComp, AttribType type, const void *data, int32_t numPoints) = 0;
+	// Returns true if the color has been set for this geometry.
+	virtual bool	hasColor() = 0;
 
 	// Set texture coordinate data for existing points.
-	// tex should be an array of UVW values, with size at least 3*numPoints.
-	// the texSize is the texture size and can be from 1 up to 8 for texture layers
+	// the numLayers is the texcoord size and can be from 1 up to 8 for texture layers
 	// the pointIdx specifies the point index with the texture coords
-	virtual void	setTexture(const float *tex, int32_t texSize, int32_t pointIdx) = 0;
+	virtual bool	setTexCoord(const TexCoord* tex, int32_t numLayers, int32_t pointIdx) = 0;
+
+	// Set texture coordinate data for existing points.
+	// the numLayers is the texCoord size and can be from 1 up to 8 for texCoord layers.
+	// The startPointIdx indicates the start index of the points to set texCoord for.
+	virtual	bool	setTexCoords(const TexCoord* t, int32_t numPoints, int32_t numLayers, int32_t startPointIdx) = 0;
+
+	// Returns true if the texCoord/textures has been set for this geometry.
+	virtual bool	hasTexCoord() = 0;
+
+	// Returns the number of texcoord layers
+	virtual int32_t getNumTexCoordLayers() = 0;
+
+	// Set the custom attribute with SOP_CustomAttribData (must have set its name, number of components, and its type)
+	// The data param must hold the data for the custom attribute.
+	// E.g a custom atrrib with 4 components for each point should holds 4*numPoints values for its data.
+	virtual bool	setCustomAttribute(const SOP_CustomAttribData* cu, int32_t numPoints) = 0;
+
+	// Returns true if the custom attributes has been set for this geometry.
+	virtual bool	hasCustomAttibutes() = 0;
 
 	// Add a triangle using the points at the given 3 indices.
-	virtual void	addTriangle(int32_t ptIdx1, int32_t ptIdx2, int32_t ptIdx3) = 0;
+	virtual bool	addTriangle(int32_t ptIdx1, int32_t ptIdx2, int32_t ptIdx3) = 0;
 
 	// Add multiple triangles using an array of point's indices.
 	// The size param represents the number of triangles to be added.
@@ -159,9 +207,63 @@ public:
 
 	// add particle systems from the points that has been already added. The points can have colors, normals and custom attribs.
 	// the startIndex param is the staring index of the points from particle system.
+	virtual bool	addParticleSystem(int32_t numParticles, int32_t startIndex) = 0;
 
-	virtual void	addParticleSystem(int32_t numParticles, int32_t startIndex) = 0;
+	// Add line strip from the points that has been already added. The points can have colors, normals and custom attribs.
+	// the 'indices' contains the indices of vertices, and 'size' is the number of indices for the line strip
+	virtual bool	addLine(const int32_t *indices, int32_t size) = 0;
 
+	// Add line strips from the points that has been already added.The points can have colors, normals and custom attribs.
+	// the 'indices' contains the indices of vertices, 'sizeOfEachLine' contains the number of vertices for each line,
+	// 'numOfLines' specifies the number of lines to be drawn.
+	// Note that the number of elements in sizeOfEachLine must be equal to numOfLines.
+	virtual bool	addLines(const int32_t *indices, int32_t* sizeOfEachLine, int32_t numOfLines) = 0;
+
+	// Returns the number of added primitives at the time of query. Currently it is either the number of triangles or particles.
+	virtual int32_t	getNumPrimitives() = 0;
+
+	// Set the bounding box for the whole geometry.
+	// Setting the bounding box helps to have exact homing on the viewer.
+	// You may set this value at each frame for non static geometries that are translating constantly.
+	virtual bool	setBoundingBox(const BoundingBox& bbox) = 0;
+
+	// Add a group with input type and name.
+	// Returns false if a group with this name already exists.
+	virtual bool	addGroup(const SOP_GroupType& type, const char* name) = 0;
+
+	// Destroy a group with input type and name.
+	// Returns false if a group with this name for the specified type does not exists.
+	virtual bool	destroyGroup(const SOP_GroupType& type, const char* name) = 0;
+
+	// Add a point with its index to an already existing group with SOP_GroupType::Point type.
+	// Returns false if a point group with this name does not exists Or
+	// if a point with that index does not exists.
+	virtual bool	addPointToGroup(int index, const char* name) = 0;
+
+	// Add a primitive with its index to an already existing group with SOP_GroupType::Primitive type.
+	// Returns false if a primitive group with this name does not exists Or
+	// if a pritimive with that index does not exists.
+	virtual bool	addPrimToGroup(int index, const char* name) = 0;
+
+	// Add a point/prim index to an already defined group.
+	// Returns false if a primitive group with this name does not exists Or
+	// if a pritimive/point with that index does not exists.
+	virtual bool	addToGroup(int index, const SOP_GroupType& type, const char* name) = 0;
+
+	// Add a point with its index to an already existing group with SOP_GroupType::Point type.
+	// Returns false if a point group with this name does not exists Or
+	// if a point with that index does not exists.
+	virtual bool	discardFromPointGroup(int index, const char* name) = 0;
+
+	// Add a primitive with its index to an already existing group with SOP_GroupType::Primitive type.
+	// Returns false if a primitive group with this name does not exists Or
+	// if a pritimive with that index does not exists.
+	virtual bool	discardFromPrimGroup(int index, const char* name) = 0;
+
+	// Remove a point/prim index from an already defined group.
+	// Returns false if a primitive group with this name does not exists Or
+	// if a pritimive/point with that index does not exists.
+	virtual bool	discardFromGroup(int index, const SOP_GroupType& type, const char* name) = 0;
 
 private:
 
@@ -180,22 +282,28 @@ public:
 	{
 	}
 
-
 	~SOP_VBOOutput()
 	{
 	}
 
-	// enable/set the normal and color if the geometry contains this information
-	virtual void	enableNormal() = 0;
+	// enable/set the normal, color, texcoord, if the geometry contains this information
+	virtual void		enableNormal() = 0;
 
-	virtual void	enableColor() = 0;
+	virtual void		enableColor() = 0;
 
-	virtual bool	hasNormal() = 0;
+	virtual void		enableTexCoord(int32_t numLayers = 0) = 0;
 
-	virtual bool	hasColor() = 0;
+	// Returns true if the normal, color, texcoord, or custom attributes has been set for this geometry.
+	virtual bool		hasNormal() = 0;
 
-	// Add the custom attribute with it's name, number of components, and it's type.
-	virtual void	addCustomAttribute(const char *name, int32_t numComp, AttribType type) = 0;
+	virtual bool		hasColor() = 0;
+
+	virtual bool		hasTexCoord() = 0;
+
+	virtual bool		hasCustomAttibutes() = 0;
+
+	// Add the custom attribute with SOP_CustomAttribInfo (must have set its name, number of components, and its type)
+	virtual bool		addCustomAttribute(const SOP_CustomAttribInfo& cu) = 0;
 
 	// Allocates and setup VBO buffers. 
 	// Call this fucntion before adding any points, colors or normals,
@@ -203,34 +311,58 @@ public:
 	// 'numVertices' is how much memory to allocate for positions/normals etc.
 	// 'numIndices' is how much memory to allocate for indices that are used
 	// to build primitives.
-	virtual void	allocVBO(int32_t numVertices, int32_t numIndices, VBOBufferMode mode) = 0;
+	virtual void		allocVBO(int32_t numVertices, int32_t numIndices, VBOBufferMode mode) = 0;
 
-	// Returns the start of the array for the vertex positions.
-	// The length of this array is numVertices * 3
-	virtual float*	getPos() = 0;
+	// Returns the start of an array of Positions that should be filled.
+	// The length of this array is numVertices.
+	virtual Position*	getPos() = 0;
 
-	// Returns the start of the array for the vertex normals.
-	// The length of this area is numVertices * 3
-	virtual float*	getNormals() = 0;
+	// Returns the start of an array of Vectors that should be filled.
+	// The length of this array is numVertices.
+	virtual Vector*		getNormals() = 0;
 
-	// Returns the start of the array for the vertex colors.
-	// The length of this array is numVertices * 4
-	virtual float*	getColors() = 0;
+	// Returns the start of an array of Colors that should be filled.
+	// The length of this array is numVertices.
+	virtual Color*		getColors() = 0;
 
-	// Create 'numTriangles' triangles. 
-	// Returns the indices for the vertices of these triangles. The indices
-	// for all the triangles must be set, their initial values is undefined.
+	// Returns the start of an array of TexCoords that should be filled.
+	// The length of this array is numVertices.
+	virtual TexCoord*	getTexCoords() = 0;
+
+	// Returns the number of texcoord layers which has been already set
+	// by enableTexCoord() call.
+	virtual int32_t		getNumTexCoordLayers() = 0;
+
+	// Returns an array of indices (of vertices) that should be filled. The indices
+	// for all the triangles must be set as their initial values is undefined.
+	// It is used to create 'numTriangles' triangles.
 	// Length of the returned array is numTriangles * 3.
-	virtual int32_t*	getTriangles(int32_t numTriangles) = 0;
+	virtual int32_t*	addTriangles(int32_t numTriangles) = 0;
 
-	// Returns the start of the array for the custom attributes by its name.
-	virtual float*	getCustomAttribute(const char *name) = 0;
+	// Returns an array of indices (of vertices) that should be filled. The indices
+	// for particles must be set as their initial values is undefined.
+	// It is used to create 'numParticles' particles.
+	// Length of the returned array is numParticles.
+	virtual int32_t*	addParticleSystem(int32_t numParticles) = 0;
+
+	// Returns an array of indices (of vertices) that should be filled.
+	// It is used to create line strip with numIndices.
+	// Length of the returned array is numIndices.
+	virtual int32_t*	addLines(int32_t numIndices) = 0;
+
+	// Returns SOP_CustomAttribData which has the start of the array for the custom attributes by its name.
+	// Returns false is case of null arguments.
+	virtual bool		getCustomAttribute(SOP_CustomAttribData* cu, const char* name) = 0;
 
 	// Finish updating the VBO buffers.
 	// After you are done with the VBO buffers, make sure to call this function
 	// Note: this function must be the last function to be called 
-	virtual void	updateComplete() = 0;
+	virtual void		updateComplete() = 0;
 
+	// Set the bounding box for the whole geometry.
+	// We recommned to set the bounding box in GPU direct mode for exact homing.
+	// You may set this value at each frame for non static geometries that are translating constantly.
+	virtual bool		setBoundingBox(const BoundingBox& bbox) = 0;
 
 private:
 
@@ -258,8 +390,10 @@ public:
 	// BEGIN PUBLIC INTERFACE
 
 	// Some general settings can be assigned here (if you ovierride it)
+	// The OP_Inputs* provides the access to the custom parameters
+	// before the call to the execute/VBO() functions.
 	virtual void
-	getGeneralInfo(SOP_GeneralInfo*)
+	getGeneralInfo(SOP_GeneralInfo*, const OP_Inputs*, void* reserved1)
 	{
 	}
 
@@ -269,19 +403,19 @@ public:
 	// If the "directToGPU" flag is set to false, this function is being called
 	// instead of executeVBO().
 	// See the OP_Inputs class definition for more details on it's contents
-	virtual void	execute(SOP_Output*, OP_Inputs*, void* reserved) = 0;
+	virtual void	execute(SOP_Output*, const OP_Inputs*, void* reserved1) = 0;
 
-	// For direct GPU loading (i.e "directToGPU" is set to true) this function is being called
+	// For direct GPU loading (i.e. "directToGPU" is set to true) this function is being called
 	// instead of execute().
 	// Fill the VBO buffers with the geometry data, obtained from your desired algorithm or files,
-	// such as points, normals, colors, textures, triangles, and etc.
-	virtual void	executeVBO(SOP_VBOOutput*, OP_Inputs*, void* reserved) = 0;
+	// such as points, normals, colors, texcoord, triangles, and etc.
+	virtual void	executeVBO(SOP_VBOOutput*, const OP_Inputs*, void* reserved1) = 0;
 
 
 	// Override these methods if you want to output values to the Info CHOP/DAT
 	// returning 0 means you dont plan to output any Info CHOP channels
 	virtual int32_t
-	getNumInfoCHOPChans()
+	getNumInfoCHOPChans(void *reserved1)
 	{
 		return 0;
 	}
@@ -294,7 +428,7 @@ public:
 	// you must allocate memory or assign a constant string
 	// to it.
 	virtual void
-	getInfoCHOPChan(int32_t index,OP_InfoCHOPChan* chan)
+	getInfoCHOPChan(int32_t index, OP_InfoCHOPChan* chan, void *reserved1)
 	{
 	}
 
@@ -304,7 +438,7 @@ public:
 	// Set the members of the CHOP_InfoDATSize class to specify
 	// the dimensions of the Info DAT
 	virtual bool
-	getInfoDATSize(OP_InfoDATSize* infoSize)
+	getInfoDATSize(OP_InfoDATSize* infoSize, void* reserved1)
 	{
 		return false;
 	}
@@ -315,50 +449,46 @@ public:
 	// if it is by column or by row.
 	// 'index' is the row/column index
 	// 'nEntries' is the number of entries in the row/column
+	// Strings should be UTF-8 encoded.
 	virtual void
-	getInfoDATEntries(int32_t index, int32_t nEntries, OP_InfoDATEntries* entries)
+	getInfoDATEntries(int32_t index, int32_t nEntries, 
+						OP_InfoDATEntries* entries, void* reserved1)
 	{
 	}
 
 
 	// You can use this function to put the node into a warning state
 	// with the returned string as the message.
-	// Return nullptr if you don't want it to be in a warning state.
-	virtual const char*
-	getWarningString()
+	virtual void
+	getWarningString(OP_String *warning, void *reserved1)
 	{
-		return nullptr;
 	}
 
 	// You can use this function to put the node into a error state
 	// with the returned string as the message.
-	// Return nullptr if you don't want it to be in a error state.
-	virtual const char*
-	getErrorString()
+	virtual void
+	getErrorString(OP_String *error, void *reserved1)
 	{
-		return nullptr;
 	}
 
 	// Use this function to return some text that will show up in the
 	// info popup (when you middle click on a node)
-	// Return nullptr if you don't want to return anything.
-	virtual const char*
-	getInfoPopupString()
+	virtual void
+	getInfoPopupString(OP_String *info, void *reserved1)
 	{
-		return nullptr;
 	}
 
 
 	// Override these methods if you want to define specfic parameters
 	virtual void
-	setupParameters(OP_ParameterManager* manager)
+	setupParameters(OP_ParameterManager* manager, void* reserved1)
 	{
 	}
 
 
 	// This is called whenever a pulse parameter is pressed
 	virtual void
-	pulsePressed(const char* name)
+	pulsePressed(const char* name, void* reserved1)
 	{
 	}
 
@@ -387,5 +517,14 @@ private:
 	int32_t			reserved[400];
 
 };
+
+static_assert(offsetof(SOP_PluginInfo, apiVersion) == 0, "Incorrect Alignment");
+static_assert(offsetof(SOP_PluginInfo, customOPInfo) == 408, "Incorrect Alignment");
+static_assert(sizeof(SOP_PluginInfo) == 944, "Incorrect Size");
+
+static_assert(offsetof(SOP_GeneralInfo, cookEveryFrame) == 0, "Incorrect Alignment");
+static_assert(offsetof(SOP_GeneralInfo, cookEveryFrameIfAsked) == 1, "Incorrect Alignment");
+static_assert(offsetof(SOP_GeneralInfo, directToGPU) == 2, "Incorrect Alignment");
+static_assert(sizeof(SOP_GeneralInfo) == 84, "Incorrect Size");
 
 #endif
