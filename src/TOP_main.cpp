@@ -5,14 +5,14 @@
 
 ////
 
-class PROJECT_NAME : public TOP_CPlusPlusBase
+class OPERATOR_NAME : public TOP_CPlusPlusBase
 {
 public:
 
-	PROJECT_NAME(const OP_NodeInfo* info, TOP_Context *context)
+	OPERATOR_NAME(const OP_NodeInfo* info, TOP_Context *context)
 	{}
 
-	virtual ~PROJECT_NAME()
+	virtual ~OPERATOR_NAME()
 	{}
 
 	void setupParameters(OP_ParameterManager* manager, void* reserved1) override
@@ -91,13 +91,13 @@ extern "C"
 
 	DLLEXPORT TOP_CPlusPlusBase* CreateTOPInstance(const OP_NodeInfo* info, TOP_Context *context)
 	{
-		return new PROJECT_NAME(info, context);
+		return new OPERATOR_NAME(info, context);
 	}
 
 	DLLEXPORT void DestroyTOPInstance(TOP_CPlusPlusBase* instance, TOP_Context *context)
 	{
 		//context->beginGLCommands();
-		delete (PROJECT_NAME*)instance;
+		delete (OPERATOR_NAME*)instance;
 		//context->endGLCommands();
 	}
 };

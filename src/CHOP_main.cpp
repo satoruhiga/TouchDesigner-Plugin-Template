@@ -5,14 +5,14 @@
 
 ////
 
-class PROJECT_NAME : public CHOP_CPlusPlusBase
+class OPERATOR_NAME : public CHOP_CPlusPlusBase
 {
 public:
 
-	PROJECT_NAME(const OP_NodeInfo* info)
+	OPERATOR_NAME(const OP_NodeInfo* info)
 	{}
 
-	virtual ~PROJECT_NAME()
+	virtual ~OPERATOR_NAME()
 	{}
 
 	void setupParameters(OP_ParameterManager* manager, void* reserved1) override
@@ -75,12 +75,12 @@ extern "C"
 
 	DLLEXPORT CHOP_CPlusPlusBase* CreateCHOPInstance(const OP_NodeInfo* info)
 	{
-		return new PROJECT_NAME(info);
+		return new OPERATOR_NAME(info);
 	}
 
 	DLLEXPORT void DestroyCHOPInstance(CHOP_CPlusPlusBase* instance)
 	{
-		delete (PROJECT_NAME*)instance;
+		delete (OPERATOR_NAME*)instance;
 	}
 };
 

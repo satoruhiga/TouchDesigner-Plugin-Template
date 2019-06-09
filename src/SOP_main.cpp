@@ -5,14 +5,14 @@
 
 ////
 
-class PROJECT_NAME : public SOP_CPlusPlusBase
+class OPERATOR_NAME : public SOP_CPlusPlusBase
 {
 public:
 
-	PROJECT_NAME(const OP_NodeInfo* info)
+	OPERATOR_NAME(const OP_NodeInfo* info)
 	{}
 
-	virtual ~PROJECT_NAME()
+	virtual ~OPERATOR_NAME()
 	{}
 
 	void setupParameters(OP_ParameterManager* manager, void* reserved1) override
@@ -70,12 +70,12 @@ extern "C"
 	}
 	DLLEXPORT SOP_CPlusPlusBase* CreateSOPInstance(const OP_NodeInfo* info)
 	{
-		return new PROJECT_NAME(info);
+		return new OPERATOR_NAME(info);
 	}
 
 	DLLEXPORT void DestroySOPInstance(SOP_CPlusPlusBase* instance)
 	{
-		delete (PROJECT_NAME*)instance;
+		delete (OPERATOR_NAME*)instance;
 	}
 };
 
