@@ -1,11 +1,15 @@
-/* Shared Use License: This file is owned by Derivative Inc. (Derivative) and
-* can only be used, and/or modified for use, in conjunction with
+/* Shared Use License: This file is owned by Derivative Inc. (Derivative)
+* and can only be used, and/or modified for use, in conjunction with
 * Derivative's TouchDesigner software, and only if you are a licensee who has
-* accepted Derivative's TouchDesigner license or assignment agreement (which
-* also govern the use of this file).  You may share a modified version of this
-* file with another authorized licensee of Derivative's TouchDesigner software.
-* Otherwise, no redistribution or sharing of this file, with or without
-* modification, is permitted.
+* accepted Derivative's TouchDesigner license or assignment agreement
+* (which also govern the use of this file). You may share or redistribute
+* a modified version of this file provided the following conditions are met:
+*
+* 1. The shared file or redistribution must retain the information set out
+* above and this list of conditions.
+* 2. Derivative's name (Derivative Inc.) or its trademarks may not be used
+* to endorse or promote products derived from this file without specific
+* prior written permission from Derivative.
 */
 
 /*
@@ -117,6 +121,13 @@ enum  class VBOBufferMode : int32_t
 	Dynamic,
 };
 
+// an enumerator to specify the group type
+enum  class SOP_GroupType
+{
+	Point = 0,
+	Primitive,
+};
+
 
 // This class is used to create geometry on the CPU, to be used in SOP networks.
 // NOTE: set 'directToGPU' flag from SOP_GeneralInfo class to false.
@@ -219,6 +230,44 @@ public:
 	// Setting the bounding box helps to have exact homing on the viewer.
 	// You may set this value at each frame for non static geometries that are translating constantly.
 	virtual bool	setBoundingBox(const BoundingBox& bbox) = 0;
+
+	// Add a group with input type and name.
+	// Returns false if a group with this name already exists.
+	virtual bool	addGroup(const SOP_GroupType& type, const char* name) = 0;
+
+	// Destroy a group with input type and name.
+	// Returns false if a group with this name for the specified type does not exists.
+	virtual bool	destroyGroup(const SOP_GroupType& type, const char* name) = 0;
+
+	// Add a point with its index to an already existing group with SOP_GroupType::Point type.
+	// Returns false if a point group with this name does not exists Or
+	// if a point with that index does not exists.
+	virtual bool	addPointToGroup(int index, const char* name) = 0;
+
+	// Add a primitive with its index to an already existing group with SOP_GroupType::Primitive type.
+	// Returns false if a primitive group with this name does not exists Or
+	// if a pritimive with that index does not exists.
+	virtual bool	addPrimToGroup(int index, const char* name) = 0;
+
+	// Add a point/prim index to an already defined group.
+	// Returns false if a primitive group with this name does not exists Or
+	// if a pritimive/point with that index does not exists.
+	virtual bool	addToGroup(int index, const SOP_GroupType& type, const char* name) = 0;
+
+	// Add a point with its index to an already existing group with SOP_GroupType::Point type.
+	// Returns false if a point group with this name does not exists Or
+	// if a point with that index does not exists.
+	virtual bool	discardFromPointGroup(int index, const char* name) = 0;
+
+	// Add a primitive with its index to an already existing group with SOP_GroupType::Primitive type.
+	// Returns false if a primitive group with this name does not exists Or
+	// if a pritimive with that index does not exists.
+	virtual bool	discardFromPrimGroup(int index, const char* name) = 0;
+
+	// Remove a point/prim index from an already defined group.
+	// Returns false if a primitive group with this name does not exists Or
+	// if a pritimive/point with that index does not exists.
+	virtual bool	discardFromGroup(int index, const SOP_GroupType& type, const char* name) = 0;
 
 private:
 

@@ -1,12 +1,16 @@
-/* Shared Use License: This file is owned by Derivative Inc. (Derivative) and
- * can only be used, and/or modified for use, in conjunction with 
- * Derivative's TouchDesigner software, and only if you are a licensee who has
- * accepted Derivative's TouchDesigner license or assignment agreement (which
- * also govern the use of this file).  You may share a modified version of this
- * file with another authorized licensee of Derivative's TouchDesigner software.
- * Otherwise, no redistribution or sharing of this file, with or without
- * modification, is permitted.
- */
+/* Shared Use License: This file is owned by Derivative Inc. (Derivative)
+* and can only be used, and/or modified for use, in conjunction with
+* Derivative's TouchDesigner software, and only if you are a licensee who has
+* accepted Derivative's TouchDesigner license or assignment agreement
+* (which also govern the use of this file). You may share or redistribute
+* a modified version of this file provided the following conditions are met:
+*
+* 1. The shared file or redistribution must retain the information set out
+* above and this list of conditions.
+* 2. Derivative's name (Derivative Inc.) or its trademarks may not be used
+* to endorse or promote products derived from this file without specific
+* prior written permission from Derivative.
+*/
 
 /*
  * Produced by:
@@ -193,6 +197,7 @@ public:
 	int32_t			reserved[20];
 };
 
+const int NumCPUPixelDatas = 3;
 
 // This class will tell you the actual output format
 // that was chosen.
@@ -217,13 +222,11 @@ public:
 
 	const int32_t	depthBits;
 	const int32_t	stencilBits;
+    /*** END: TOP_ExecuteMode::OpenGL_FBO and CUDA executeMode specific ***/
 
 
 	// The OpenGL internal format of the output texture. E.g GL_RGBA8, GL_RGBA32F
 	const GLint		pixelFormat; 
-    /*** END: TOP_ExecuteMode::OpenGL_FBO and CUDA executeMode specific ***/
-
-
 
 
     /*** BEGIN: CPU_MEM_* executeMode specific ***/
@@ -239,7 +242,7 @@ public:
 	// valid though.
 	// This means you can hold onto these pointers by default and use them
 	// after execute() returns, such as filling them in another thread.
-    void* const		cpuPixelData[3];
+    void* const		cpuPixelData[NumCPUPixelDatas];
 
     // setting this to 0 will upload memory from cpuPixelData[0],
     // setting this to 1 will upload memory from cpuPixelData[1]

@@ -1,28 +1,19 @@
-/* Shared Use License: This file is owned by Derivative Inc. (Derivative) and
-* can only be used, and/or modified for use, in conjunction with
+/* Shared Use License: This file is owned by Derivative Inc. (Derivative)
+* and can only be used, and/or modified for use, in conjunction with
 * Derivative's TouchDesigner software, and only if you are a licensee who has
-* accepted Derivative's TouchDesigner license or assignment agreement (which
-* also govern the use of this file).  You may share a modified version of this
-* file with another authorized licensee of Derivative's TouchDesigner software.
-* Otherwise, no redistribution or sharing of this file, with or without
-* modification, is permitted.
-*/
-
-/*
-* Produced by:
+* accepted Derivative's TouchDesigner license or assignment agreement
+* (which also govern the use of this file). You may share or redistribute
+* a modified version of this file provided the following conditions are met:
 *
-* 				Derivative Inc
-*				401 Richmond Street West, Unit 386
-*				Toronto, Ontario
-*				Canada   M5V 3A8
-*				416-591-3555
-*
-* NAME:				CPlusPlus_Common.h
-*
+* 1. The shared file or redistribution must retain the information set out
+* above and this list of conditions.
+* 2. Derivative's name (Derivative Inc.) or its trademarks may not be used
+* to endorse or promote products derived from this file without specific
+* prior written permission from Derivative.
 */
 
 /*******
-Derivative Developers:: Make sure the virtual function order
+Derivative Developers: Make sure the virtual function order
 stays the same, otherwise changes won't be backwards compatible
 ********/
 
@@ -62,13 +53,19 @@ enum class OP_CPUMemPixelType : int32_t
 	// 32-bit float per color, RGBA pixels
 	RGBA32Float,
 
-	// Single and double channel options
-	// Fixed
+	// A few single and two channel versions of the above
 	R8Fixed,
 	RG8Fixed,
-	// Float
 	R32Float,
 	RG32Float,
+
+	R16Fixed = 100,
+	RG16Fixed,
+	RGBA16Fixed,
+
+	R16Float = 200,
+	RG16Float,
+	RGBA16Float,
 };
 
 class OP_String;
@@ -89,7 +86,7 @@ public:
 	// Spaces are not allowed
 	OP_String*		opType;
 
-	// The english readable label for the node. This is what is show in the 
+	// The english readable label for the node. This is what is shown in the 
 	// OP Create Menu dialog.
 	// Spaces and other special characters are allowed.
 	// This can be a UTF-8 encoded string for non-english langauge label
@@ -146,24 +143,26 @@ public:
 class OP_NodeInfo
 {
 public:
-	// The full path to the operator
 
+	// The full path to the operator
 	const char*		opPath;
 
 	// A unique ID representing the operator, no two operators will ever
 	// have the same ID in a single TouchDesigner instance.
-
 	uint32_t		opId;
 
 	// This is the handle to the main TouchDesigner window.
 	// It's possible this will be 0 the first few times the operator cooks,
 	// incase it cooks while TouchDesigner is still loading up
-
 #ifdef _WIN32
 	HWND			mainWindowHandle;
 #endif
 
-	int32_t			reserved[19];
+	// The path to where the plugin's binary is located on this machine.
+	// UTF8-8 encoded.
+	const char*		pluginPath;
+
+	int32_t			reserved[17];
 };
 
 
@@ -804,7 +803,7 @@ public:
 		attribType = AttribType::Float;
 	}
 
-	SOP_CustomAttribInfo(const char* n, int32_t numComp, const AttribType& type)
+	SOP_CustomAttribInfo(const char* n, int32_t numComp, AttribType type)
 	{
 		name = n;
 		numComponents = numComp;
@@ -825,18 +824,13 @@ public:
 
 	SOP_CustomAttribData()
 	{
-		name = nullptr;
-		numComponents = 0;
-		attribType = AttribType::Float;
 		floatData = nullptr;
 		intData = nullptr;
 	}
 
-	SOP_CustomAttribData(const char* n, int32_t numComp, const AttribType& type)
+	SOP_CustomAttribData(const char* n, int32_t numComp, AttribType type) :
+		SOP_CustomAttribInfo(n, numComp, type)
 	{
-		name = n;
-		numComponents = numComp;
-		attribType = type;
 		floatData = nullptr;
 		intData = nullptr;
 	}
@@ -1005,6 +999,45 @@ public:
 
 };
 
+class OP_TimeInfo
+{
+public:
+
+	// same as global Python value absTime.frame. Counts up forever
+	// since the application started. In rootFPS units.
+	int64_t	absFrame;
+
+	// The timeline frame number for this cook
+	double	frame;
+
+	// The timeline FPS/rate this node is cooking at.
+	// If the component this node is located in has Component Time, it's FPS
+	// may be different than the Root FPS
+	double	rate;
+
+	// The frame number for the root timeline. Different than frame
+	// if the node is in a component that has component time.
+	double 	rootFrame;
+
+	// The Root FPS/Rate the file is running at.
+	double	rootRate;
+
+	// The number of frames that have elapsed since the last cook occured.
+	// This can be more than one if frames were dropped.
+	// If this is the first time this node is cooking, this will be 0.0
+	// This is in 'rate' units, not 'rootRate' units.
+	double	deltaFrames;
+
+	// The number of milliseconds that have elapsed since the last cook.
+	// Note that this isn't done via CPU timers, but is instead 
+	// simply deltaFrames * milliSecondsPerFrame
+	double	deltaMS;
+
+
+
+	int32_t	reserved[40];
+};
+
 
 class OP_Inputs
 {
@@ -1013,13 +1046,17 @@ public:
 	// be called inside a beginGLCommands()/endGLCommands() section
 	// as they may require GL themselves to complete execution.
 
-	// these are wired into the node
+	// Inputs that are wired into the node. Note that since some inputs
+	// may not be connected this number doesn't mean that that the first N
+	// inputs are connected. For example on a 3 input node if the 3rd input
+	// is only one connected, this will return 1, and getInput*(0) and (1)
+	// will return nullptr.
 	virtual int32_t		getNumInputs() const = 0;
 
-	// may return nullptr when invalid input
+	// Will return nullptr when the input has nothing connected to it.
 	// only valid for C++ TOP operators
 	virtual const OP_TOPInput*		getInputTOP(int32_t index) const = 0;
-	// only valid for C++ CHOP operators
+	// Only valid for C++ CHOP operators
 	virtual const OP_CHOPInput*		getInputCHOP(int32_t index) const = 0;
 	// getInputSOP() declared later on in the class
 	// getInputDAT() declared later on in the class
@@ -1109,10 +1146,15 @@ public:
 	// To use Python in your Plugin you need to fill the
 	// customOPInfo.pythonVersion member in Fill*PluginInfo.
 	//
-	// The returned object does NOT have it's reference count incremented.
-	// So increment it if you want to hold onto the object, and only
-	// decement it if you've incremented it.
+	// The returned object, if not null should have its reference count decremented
+	// or else a memorky leak will occur.
 	virtual PyObject*				getParPython(const char* name) const = 0;
+
+
+	// Returns a class whose members gives you information about timing
+	// such as FPS and delta-time since the last cook.
+	// See OP_TimeInfo for more information
+	virtual const OP_TimeInfo*		getTimeInfo() const = 0;
 
 };
 
@@ -1312,7 +1354,7 @@ static_assert(offsetof(OP_NodeInfo, opId) == 8, "Incorrect Alignment");
 	static_assert(offsetof(OP_NodeInfo, mainWindowHandle) == 16, "Incorrect Alignment");
 	static_assert(sizeof(OP_NodeInfo) == 104, "Incorrect Size");
 #else
-	static_assert(sizeof(OP_NodeInfo) == 88, "Incorrect Size");
+	static_assert(sizeof(OP_NodeInfo) == 96, "Incorrect Size");
 #endif
 
 static_assert(offsetof(OP_DATInput, opPath) == 0, "Incorrect Alignment");
@@ -1440,4 +1482,5 @@ static_assert(offsetof(OP_StringParameter, label) == 8, "Incorrect Alignment");
 static_assert(offsetof(OP_StringParameter, page) == 16, "Incorrect Alignment");
 static_assert(offsetof(OP_StringParameter, defaultValue) == 24, "Incorrect Alignment");
 static_assert(sizeof(OP_StringParameter) == 112, "Incorrect Size");
+static_assert(sizeof(OP_TimeInfo) == 216, "Incorrect Size");
 #endif
