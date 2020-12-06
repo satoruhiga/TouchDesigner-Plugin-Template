@@ -57,7 +57,8 @@ find_package(OpenGL REQUIRED)
 target_link_libraries(${OPERATOR_NAME} ${OPENGL_LIBRARY} ${LINK_LIBRARIES})
 
 set_target_properties(${OPERATOR_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/out)
-set_target_properties(${OPERATOR_NAME} PROPERTIES VS_DEBUGGER_COMMAND "C:/Program Files/Derivative/TouchDesigner099/bin/TouchDesigner099.exe")
+set_target_properties(${OPERATOR_NAME} PROPERTIES VS_DEBUGGER_COMMAND "C:/Program Files/Derivative/TouchDesigner/bin/TouchDesigner.exe")
+set_target_properties(${OPERATOR_NAME} PROPERTIES VS_DEBUGGER_ENVIRONMENT "TOUCH_TEXT_CONSOLE=1")
 set_target_properties(${OPERATOR_NAME} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "test.toe")
 
 ### hot-reloading using OSC message (`oscer` https://github.com/aike/oscer)
