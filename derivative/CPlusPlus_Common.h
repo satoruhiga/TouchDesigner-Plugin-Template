@@ -136,7 +136,15 @@ public:
 	// It should be left unchanged if CPython isn't being used in this plugin.
 	OP_String*		pythonVersion;
 
-	int32_t			reserved[98];
+	// False by default. If this is on the node will cook at least once
+	// when the project it is contained within starts up, or when the node
+	// is created.
+	// For pure output nodes that are using 'cookEveryFrame=true' in their
+	// GeneralInfo, setting this to 'true' is required to kick-start the
+	// every-frame cooking.
+	bool			cookOnStart = false;
+
+	int32_t			reserved[97];
 };
 
 
@@ -934,6 +942,14 @@ public:
 	// attribute 'Cd'
 	virtual bool			hasColors() const = 0;
 
+	// Returns true if the position lies inside the geometry.
+	virtual bool			isInside(const Position &pos) = 0;
+
+	// Returns true if the ray intersected with the geometry
+	virtual bool			sendRay(const Position &pos, const Vector &dir, 
+								Position &hitPostion, float &hitLength, Vector &hitNormal,
+								float &hitU, float &hitV, int &hitPrimitiveIndex) = 0;
+
 	// Returns the SOP_PrimitiveInfo with primIndex
 	const SOP_PrimitiveInfo
 	getPrimitive(int32_t primIndex) const
@@ -943,8 +959,6 @@ public:
 
 	// Returns the full list of all the point indices for all primitives.
 	// The primitives are stored back to back in this array.
-	// This is a faster but harder way to work with primitives than
-	// getPrimPointIndices()
 	const int32_t*
 	getAllPrimPointIndices()
 	{
@@ -957,7 +971,7 @@ public:
 	// The number of times this node has cooked
 	int64_t			totalCooks;
 
-	int32_t			reserved[98];
+	int32_t			reserved[97];
 };
 
 

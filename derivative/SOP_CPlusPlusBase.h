@@ -83,6 +83,13 @@ public:
 	// if none of it's inputs/parameters are changing, and nobody is asking
 	// for it's output (asking for it to cook).
 	// Defaults to false.
+	// Important:
+	// If the node may not be viewed/used by other nodes in the file,
+	// such as a TCP network output node that isn't viewed in perform mode,
+	// you should set cookOnStart = true in OP_CustomOPInfo.
+	// That will ensure cooking is kick-started for this node.
+	// Note that this fix only works for Custom Operators, not
+	// cases where the .dll is loaded into CPlusPlus SOP.
 	bool	cookEveryFrame;
 
 	// Set this to true if you want the SOP to cook every frame, but only

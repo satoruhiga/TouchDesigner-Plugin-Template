@@ -1,18 +1,16 @@
-#if OPERATOR_TYPE_CHOP == 1
-
 #include "CPlusPlus_Common.h"
 #include "CHOP_CPlusPlusBase.h"
 
 ////
 
-class OPERATOR_NAME : public CHOP_CPlusPlusBase
+class CustomCHOP : public CHOP_CPlusPlusBase
 {
 public:
 
-	OPERATOR_NAME(const OP_NodeInfo* info)
+	CustomCHOP(const OP_NodeInfo* info)
 	{}
 
-	virtual ~OPERATOR_NAME()
+	virtual ~CustomCHOP()
 	{}
 
 	void setupParameters(OP_ParameterManager* manager, void* reserved1) override
@@ -75,13 +73,11 @@ extern "C"
 
 	DLLEXPORT CHOP_CPlusPlusBase* CreateCHOPInstance(const OP_NodeInfo* info)
 	{
-		return new OPERATOR_NAME(info);
+		return new CustomCHOP(info);
 	}
 
 	DLLEXPORT void DestroyCHOPInstance(CHOP_CPlusPlusBase* instance)
 	{
-		delete (OPERATOR_NAME*)instance;
+		delete (CustomCHOP*)instance;
 	}
 };
-
-#endif

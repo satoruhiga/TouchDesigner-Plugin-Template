@@ -1,18 +1,16 @@
-#if OPERATOR_TYPE_SOP == 1
-
 #include "CPlusPlus_Common.h"
 #include "SOP_CPlusPlusBase.h"
 
 ////
 
-class OPERATOR_NAME : public SOP_CPlusPlusBase
+class CustomSOP : public SOP_CPlusPlusBase
 {
 public:
 
-	OPERATOR_NAME(const OP_NodeInfo* info)
+	CustomSOP(const OP_NodeInfo* info)
 	{}
 
-	virtual ~OPERATOR_NAME()
+	virtual ~CustomSOP()
 	{}
 
 	void setupParameters(OP_ParameterManager* manager, void* reserved1) override
@@ -70,13 +68,11 @@ extern "C"
 	}
 	DLLEXPORT SOP_CPlusPlusBase* CreateSOPInstance(const OP_NodeInfo* info)
 	{
-		return new OPERATOR_NAME(info);
+		return new CustomSOP(info);
 	}
 
 	DLLEXPORT void DestroySOPInstance(SOP_CPlusPlusBase* instance)
 	{
-		delete (OPERATOR_NAME*)instance;
+		delete (CustomSOP*)instance;
 	}
 };
-
-#endif

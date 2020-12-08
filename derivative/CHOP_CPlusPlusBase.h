@@ -82,6 +82,13 @@ public:
 	// Set this to true if you want the CHOP to cook every frame, even
 	// if none of it's inputs/parameters are changing
 	// DEFAULT: false
+	// Important:
+	// If the node may not be viewed/used by other nodes in the file,
+	// such as a TCP network output node that isn't viewed in perform mode,
+	// you should set cookOnStart = true in OP_CustomOPInfo.
+	// That will ensure cooking is kick-started for this node.
+	// Note that this fix only works for Custom Operators, not
+	// cases where the .dll is loaded into CPlusPlus CHOP.
 
 	bool			cookEveryFrame;
 

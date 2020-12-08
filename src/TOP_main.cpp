@@ -1,18 +1,16 @@
-#if OPERATOR_TYPE_TOP == 1
-
 #include "CPlusPlus_Common.h"
 #include "TOP_CPlusPlusBase.h"
 
 ////
 
-class OPERATOR_NAME : public TOP_CPlusPlusBase
+class CustomTOP : public TOP_CPlusPlusBase
 {
 public:
 
-	OPERATOR_NAME(const OP_NodeInfo* info, TOP_Context *context)
+	CustomTOP(const OP_NodeInfo* info, TOP_Context *context)
 	{}
 
-	virtual ~OPERATOR_NAME()
+	virtual ~CustomTOP()
 	{}
 
 	void setupParameters(OP_ParameterManager* manager, void* reserved1) override
@@ -91,15 +89,13 @@ extern "C"
 
 	DLLEXPORT TOP_CPlusPlusBase* CreateTOPInstance(const OP_NodeInfo* info, TOP_Context *context)
 	{
-		return new OPERATOR_NAME(info, context);
+		return new CustomTOP(info, context);
 	}
 
 	DLLEXPORT void DestroyTOPInstance(TOP_CPlusPlusBase* instance, TOP_Context *context)
 	{
 		//context->beginGLCommands();
-		delete (OPERATOR_NAME*)instance;
+		delete (CustomTOP*)instance;
 		//context->endGLCommands();
 	}
 };
-
-#endif
