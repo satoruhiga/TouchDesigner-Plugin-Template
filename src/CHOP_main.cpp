@@ -60,6 +60,9 @@ extern "C"
 		// The opLabel is the text that will show up in the OP Create Dialog
 		info->customOPInfo.opLabel->setString("Test OP");
 
+		// Will be turned into a 3 letter icon on the nodes
+		info->customOPInfo.opIcon->setString("TST");
+
 		// Information about the author of this OP
 		info->customOPInfo.authorName->setString("Author Name");
 		info->customOPInfo.authorEmail->setString("email@email.com");
