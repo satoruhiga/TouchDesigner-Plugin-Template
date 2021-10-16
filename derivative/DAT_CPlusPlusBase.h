@@ -39,16 +39,7 @@
 #include <assert.h>
 #include "CPlusPlus_Common.h"
 
-
-class DAT_CPlusPlusBase;
-struct DAT_PluginInfo;
-
-
-// These are the definitions for the C-functions that are used to
-// load the library and create instances of the object you define
-typedef void(__cdecl *FILLDATPLUGININFO)(DAT_PluginInfo *info);
-typedef DAT_CPlusPlusBase* (__cdecl *CREATEDATINSTANCE)(const OP_NodeInfo*);
-typedef void(__cdecl *DESTROYDATINSTANCE)(DAT_CPlusPlusBase*);
+#pragma pack(push, 8)
 
 // Define for the current API version that this sample code is made for.
 // To upgrade to a newer version, replace the files
@@ -59,7 +50,7 @@ typedef void(__cdecl *DESTROYDATINSTANCE)(DAT_CPlusPlusBase*);
 // the new API requirements
 const int DATCPlusPlusAPIVersion = 2;
 
-struct DAT_PluginInfo
+class DAT_PluginInfo
 {
 public:
 	int32_t			apiVersion = 0;
@@ -157,7 +148,7 @@ public:
 	// Set the int data for each cell, similar to the setCellString() but sets Int values.
 	virtual bool	setCellInt(int32_t row, int32_t col, int32_t value) = 0;
 
-	// Set the  data for each cell, similar to the setCellString() but sets Double values.
+	// Set the data for each cell, similar to the setCellString() but sets Double values.
 	virtual bool	setCellDouble(int32_t row, int32_t col, double value) = 0;
 
 
@@ -179,7 +170,7 @@ public:
 
 private:
 
-	int32_t    reserved[20];
+	int32_t		reserved[20];
 };
 
 
@@ -322,6 +313,8 @@ private:
 	int32_t			reserved[400];
 
 };
+
+#pragma pack(pop)
 
 static_assert(offsetof(DAT_PluginInfo, apiVersion) == 0, "Incorrect Alignment");
 static_assert(offsetof(DAT_PluginInfo, customOPInfo) == 408, "Incorrect Alignment");

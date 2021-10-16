@@ -51,6 +51,7 @@ class TOP_Context;
 	#endif
 #endif
 
+#pragma pack(push, 8)
 
 enum class TOP_ExecuteMode : int32_t
 { 
@@ -66,14 +67,14 @@ enum class TOP_ExecuteMode : int32_t
 	// made when using this mode. Doing so will likely result in
 	// rendering issues within TD.
 
-    // cpuPixelData[0] and cpupixelData[1] are width by height array of pixels. 
-    // to access pixel (x,y) you would need to offset the memory location by bytesperpixel * ( y * width + x).
-    // all pixels should be set, pixels that was not set will have an undefined value.
+	// cpuPixelData[0] and cpupixelData[1] are width by height array of pixels. 
+	// to access pixel (x,y) you would need to offset the memory location by bytesperpixel * ( y * width + x).
+	// all pixels should be set, pixels that was not set will have an undefined value.
 
-    // "CPUMemWriteOnly" - cpuPixelData* will be provided that you fill in with pixel data. This will automatically be uploaded to the GPU as a texture for you. Reading from the memory will result in very poor performance.
+	// "CPUMemWriteOnly" - cpuPixelData* will be provided that you fill in with pixel data. This will automatically be uploaded to the GPU as a texture for you. Reading from the memory will result in very poor performance.
 	CPUMemWriteOnly, 
 
-    // "CPUmemReadWrite - same as CPU_MEM_WRITEONLY but reading from the memory won't result in a large performance pentalty. The initial contents of the memory is undefined still.
+	// "CPUmemReadWrite - same as CPU_MEM_WRITEONLY but reading from the memory won't result in a large performance pentalty. The initial contents of the memory is undefined still.
 	CPUMemReadWrite,
 
 	// Using CUDA. Textures will be given using cudaArray*, registered with
@@ -104,7 +105,7 @@ enum class TOP_FirstPixel : int32_t
 // the new API requirements
 const int TOPCPlusPlusAPIVersion = 10;
 
-struct TOP_PluginInfo
+class TOP_PluginInfo
 {
 public:
 	// Must be set to TOPCPlusPlusAPIVersion in FillTOPPluginInfo
@@ -125,16 +126,6 @@ private:
 	int32_t			reserved2[20];
 
 };
-
-// These are the definitions for the C-functions that are used to
-// load the library and create instances of the object you define
-typedef void (__cdecl *FILLTOPPLUGININFO)(TOP_PluginInfo* info);
-typedef TOP_CPlusPlusBase* (__cdecl *CREATETOPINSTANCE)(const OP_NodeInfo*,
-														TOP_Context*);
-typedef void (__cdecl *DESTROYTOPINSTANCE)(TOP_CPlusPlusBase*, TOP_Context*);
-
-// These classes are used to pass data to/from the functions you will define
-
 
 
 // TouchDesigner will select the best pixel format based on the options you give
@@ -224,30 +215,30 @@ public:
 
 	const int32_t	antiAlias;
 
-    const int32_t	redBits;
-    const int32_t	blueBits;
-    const int32_t	greenBits;
-    const int32_t	alphaBits;
-    const bool		floatPrecision;
+	const int32_t	redBits;
+	const int32_t	blueBits;
+	const int32_t	greenBits;
+	const int32_t	alphaBits;
+	const bool		floatPrecision;
 
-    /*** BEGIN: TOP_ExcuteMode::OpenGL_FBO and CUDA executeMode specific ***/
+	/*** BEGIN: TOP_ExcuteMode::OpenGL_FBO and CUDA executeMode specific ***/
 	const int32_t	numColorBuffers;
 
 	const int32_t	depthBits;
 	const int32_t	stencilBits;
-    /*** END: TOP_ExecuteMode::OpenGL_FBO and CUDA executeMode specific ***/
+	/*** END: TOP_ExecuteMode::OpenGL_FBO and CUDA executeMode specific ***/
 
 
 	// The OpenGL internal format of the output texture. E.g GL_RGBA8, GL_RGBA32F
 	const GLint		pixelFormat; 
 
 
-    /*** BEGIN: CPU_MEM_* executeMode specific ***/
+	/*** BEGIN: CPU_MEM_* executeMode specific ***/
 
-    // if the 'executeMode' is set to CPU_MEM_*
-    // then cpuPixelData will point to three blocks of memory of size 
-    // width * height * bytesPerPixel
-    // and one may be uploaded as a texture after the execute call.
+	// if the 'executeMode' is set to CPU_MEM_*
+	// then cpuPixelData will point to three blocks of memory of size 
+	// width * height * bytesPerPixel
+	// and one may be uploaded as a texture after the execute call.
 	// All of these pointers will stay valid until the next execute() call
 	// unless you set newCPUPixelDataLocation to 0, 1 or 2. In that case
 	// the location you specified will become invalid as soon as execute()
@@ -255,18 +246,18 @@ public:
 	// valid though.
 	// This means you can hold onto these pointers by default and use them
 	// after execute() returns, such as filling them in another thread.
-    void* const		cpuPixelData[NumCPUPixelDatas];
+	void* const		cpuPixelData[NumCPUPixelDatas];
 
-    // setting this to 0 will upload memory from cpuPixelData[0],
-    // setting this to 1 will upload memory from cpuPixelData[1]
-    // setting this to 2 will upload memory from cpuPixelData[2]
-    // uploading from a memory location will invalidate it and a new memory location will be provided next execute call.
-    // setting this to -1 will not upload any memory and retain previously uploaded texture
-    // setting this to any other value will result in an error being displayed in the CPlusPlus TOP.
-    // defaults to -1
-    int32_t			newCPUPixelDataLocation;
+	// setting this to 0 will upload memory from cpuPixelData[0],
+	// setting this to 1 will upload memory from cpuPixelData[1]
+	// setting this to 2 will upload memory from cpuPixelData[2]
+	// uploading from a memory location will invalidate it and a new memory location will be provided next execute call.
+	// setting this to -1 will not upload any memory and retain previously uploaded texture
+	// setting this to any other value will result in an error being displayed in the CPlusPlus TOP.
+	// defaults to -1
+	int32_t			newCPUPixelDataLocation;
 
-    /*** END: CPU_MEM_* executeMode specific ***/
+	/*** END: CPU_MEM_* executeMode specific ***/
 
 
 
@@ -285,7 +276,7 @@ public:
 	// This is always a GL_RENDERBUFFER GL object
 	const GLuint 	depthBufferRB;
 
-    /*** END: TOP_ExecuteMode::OpenGL_FBO executeMode specific ***/
+	/*** END: TOP_ExecuteMode::OpenGL_FBO executeMode specific ***/
 
 	/*** BEGIN: TOP_ExecuteMode::CUDA specific ***/
 	// Write to this CUDA memory to fill the output textures
@@ -343,12 +334,12 @@ public:
 	// Unused by current API Version, but remains for backwards compatibility
 	int32_t 		reservedForLegacy1;
 
-    // determines the datatype of each pixel in CPU memory. This will determin
+	// determines the datatype of each pixel in CPU memory. This will determin
 	// the size of the CPU memory buffers that are given to you
 	// in TOP_OutputFormatSpecs
-    // "BGRA8Fixed" - each pixel will hold 4 fixed-point values of size 8 bits (use 'unsigned char' in the code). They will be ordered BGRA. This is the preferred ordering for better performance.
-    // "RGBA8Fixed" - each pixel will hold 4 fixed-point values of size 8 bits (use 'unsigned char' in the code). They will be ordered RGBA
-    // "RGBA32Float" - each pixel will hold 4 floating-point values of size 32 bits (use 'float' in the code). They will be ordered RGBA 
+	// "BGRA8Fixed" - each pixel will hold 4 fixed-point values of size 8 bits (use 'unsigned char' in the code). They will be ordered BGRA. This is the preferred ordering for better performance.
+	// "RGBA8Fixed" - each pixel will hold 4 fixed-point values of size 8 bits (use 'unsigned char' in the code). They will be ordered RGBA
+	// "RGBA32Float" - each pixel will hold 4 floating-point values of size 32 bits (use 'float' in the code). They will be ordered RGBA 
 	//
 	// Other cases are listed in the CPUMemPixelType enumeration
 	OP_CPUMemPixelType	memPixelType;
@@ -610,6 +601,8 @@ public:
 	int32_t			reserved[400];
 
 };
+
+#pragma pack(pop)
 
 static_assert(offsetof(TOP_PluginInfo, apiVersion) == 0, "Incorrect Alignment");
 static_assert(offsetof(TOP_PluginInfo, executeMode) == 4, "Incorrect Alignment");
