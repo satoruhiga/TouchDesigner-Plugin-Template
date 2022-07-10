@@ -3,6 +3,8 @@
 #include "CPlusPlus_Common.h"
 #include "DAT_CPlusPlusBase.h"
 
+using namespace TD;
+
 ////
 
 class CustomDAT : public DAT_CPlusPlusBase
@@ -34,7 +36,7 @@ public:
 		if (!isTable) // is Text
 		{
 			output->setOutputDataType(DAT_OutDataType::Text);
-			output->setText("TEST");
+			output->setText("TEST from C++");
 		}
 		else
 		{

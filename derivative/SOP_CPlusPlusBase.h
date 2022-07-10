@@ -39,15 +39,12 @@
 #include <assert.h>
 #include "CPlusPlus_Common.h"
 
+namespace TD
+{
+
 class SOP_CPlusPlusBase;
-struct SOP_PluginInfo;
 
-
-// These are the definitions for the C-functions that are used to
-// load the library and create instances of the object you define
-typedef void(__cdecl *FILLSOPPLUGININFO)(SOP_PluginInfo *info);
-typedef SOP_CPlusPlusBase* (__cdecl *CREATESOPINSTANCE)(const OP_NodeInfo*);
-typedef void(__cdecl *DESTROYSOPINSTANCE)(SOP_CPlusPlusBase*);
+#pragma pack(push, 8)
 
 // Define for the current API version that this sample code is made for.
 // To upgrade to a newer version, replace the files
@@ -56,33 +53,30 @@ typedef void(__cdecl *DESTROYSOPINSTANCE)(SOP_CPlusPlusBase*);
 // from the samples folder in a newer TouchDesigner installation.
 // You may need to upgrade your plugin code in that case, to match
 // the new API requirements
-const int SOPCPlusPlusAPIVersion = 2;
+const int SOPCPlusPlusAPIVersion = 3;
 
-struct SOP_PluginInfo
+class SOP_PluginInfo
 {
 public:
 	int32_t			apiVersion = 0;
 
-private:
 	int32_t			reserved[100];
 
-public:
 	// Information used to describe this plugin as a custom OP.
 	OP_CustomOPInfo	customOPInfo;
 
-private:
 	int32_t			reserved2[20];
 };
-
-
 
 class SOP_GeneralInfo
 {
 public:
 	// Set this to true if you want the SOP to cook every frame, even
-	// if none of it's inputs/parameters are changing, and nobody is asking
-	// for it's output (asking for it to cook).
-	// Defaults to false.
+	// if none of it's inputs/parameters are changing.
+	// This is generally useful for cases where the node is outputting to
+	// something external to TouchDesigner, such as a network socket or device.
+	// It ensures the node cooks every if nothing inside the network is using/viewing
+	// the output of this node.
 	// Important:
 	// If the node may not be viewed/used by other nodes in the file,
 	// such as a TCP network output node that isn't viewed in perform mode,
@@ -90,13 +84,15 @@ public:
 	// That will ensure cooking is kick-started for this node.
 	// Note that this fix only works for Custom Operators, not
 	// cases where the .dll is loaded into CPlusPlus SOP.
-	bool	cookEveryFrame;
+	// DEFAULT: false
+	bool cookEveryFrame;
 
 	// Set this to true if you want the SOP to cook every frame, but only
 	// if someone asks for it to cook. So if nobody is using the output from
 	// the SOP, it won't cook. This is difereent from 'cookEveryFrame'
 	// since that will cause it to cook every frame no matter what.
 	// Defaults to false.
+	// DEFAULT: false
 	bool	cookEveryFrameIfAsked;
 
 
@@ -106,7 +102,7 @@ public:
 	// If this flag is set to false, then execute() function is called.
 	// When directToGPU is true, the data is not available to be used in SOPs,
 	// except to be rendered with a Render TOP.
-	// Defaults to false.
+	// DEFAULT: false.
 	bool	directToGPU;
 
 
@@ -119,7 +115,7 @@ private:
 // The buffer object mode. 
 // This helps the graphics driver determine where to keep the data
 // for beter performance.
-enum  class VBOBufferMode : int32_t
+enum class VBOBufferMode : int32_t
 {
 	// The data will be modified once or rarely and used many times.
 	Static = 0,
@@ -129,7 +125,7 @@ enum  class VBOBufferMode : int32_t
 };
 
 // an enumerator to specify the group type
-enum  class SOP_GroupType
+enum class SOP_GroupType
 {
 	Point = 0,
 	Primitive,
@@ -185,12 +181,14 @@ public:
 	virtual bool	hasColor() = 0;
 
 	// Set texture coordinate data for existing points.
-	// the numLayers is the texcoord size and can be from 1 up to 8 for texture layers
-	// the pointIdx specifies the point index with the texture coords
+	// The numLayers is the texcoord size and can be from 1 up to 8 for texture layers
+	// The first numLayers used will be used as the max number of layers for all future calls for this cook.
+	// The pointIdx specifies the point index with the texture coords
 	virtual bool	setTexCoord(const TexCoord* tex, int32_t numLayers, int32_t pointIdx) = 0;
 
 	// Set texture coordinate data for existing points.
-	// the numLayers is the texCoord size and can be from 1 up to 8 for texCoord layers.
+	// The numLayers is the texCoord size and can be from 1 up to 8 for texCoord layers.
+	// The first numLayers used will be used as the max number of layers for all future calls for this cook.
 	// The startPointIdx indicates the start index of the points to set texCoord for.
 	virtual	bool	setTexCoords(const TexCoord* t, int32_t numPoints, int32_t numLayers, int32_t startPointIdx) = 0;
 
@@ -278,7 +276,7 @@ public:
 
 private:
 
-	int32_t    reserved[20];
+	int32_t		reserved[20];
 };
 
 
@@ -529,6 +527,8 @@ private:
 
 };
 
+#pragma pack(pop)
+
 static_assert(offsetof(SOP_PluginInfo, apiVersion) == 0, "Incorrect Alignment");
 static_assert(offsetof(SOP_PluginInfo, customOPInfo) == 408, "Incorrect Alignment");
 static_assert(sizeof(SOP_PluginInfo) == 944, "Incorrect Size");
@@ -537,5 +537,7 @@ static_assert(offsetof(SOP_GeneralInfo, cookEveryFrame) == 0, "Incorrect Alignme
 static_assert(offsetof(SOP_GeneralInfo, cookEveryFrameIfAsked) == 1, "Incorrect Alignment");
 static_assert(offsetof(SOP_GeneralInfo, directToGPU) == 2, "Incorrect Alignment");
 static_assert(sizeof(SOP_GeneralInfo) == 84, "Incorrect Size");
+
+};	// namespace TD
 
 #endif

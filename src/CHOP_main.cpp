@@ -1,6 +1,8 @@
 #include "CPlusPlus_Common.h"
 #include "CHOP_CPlusPlusBase.h"
 
+using namespace TD;
+
 ////
 
 class CustomCHOP : public CHOP_CPlusPlusBase
@@ -10,7 +12,7 @@ public:
 	CustomCHOP(const OP_NodeInfo* info)
 	{}
 
-	virtual ~CustomCHOP()
+	virtual ~CustomCHOP() override
 	{}
 
 	void setupParameters(OP_ParameterManager* manager, void* reserved1) override
@@ -37,8 +39,8 @@ public:
 	{
 		for (int i = 0; i < output->numSamples; i++)
 		{
-			float d = (float)i / (output->numSamples - 1);
-			output->channels[0][i] = sin(d * 3.1415 * 2);
+			float d = (float)i / float(output->numSamples - 1);
+			output->channels[0][i] = sinf(d * 3.1415f * 2.0f);
 		}
 	}
 };

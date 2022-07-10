@@ -1,6 +1,8 @@
 #include "CPlusPlus_Common.h"
 #include "SOP_CPlusPlusBase.h"
 
+using namespace TD;
+
 ////
 
 class CustomSOP : public SOP_CPlusPlusBase

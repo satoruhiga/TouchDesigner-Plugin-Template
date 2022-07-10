@@ -1,13 +1,18 @@
 #include "CPlusPlus_Common.h"
 #include "TOP_CPlusPlusBase.h"
 
+using namespace TD;
+
 ////
+
 
 class CustomTOP : public TOP_CPlusPlusBase
 {
 public:
-
-	CustomTOP(const OP_NodeInfo* info, TOP_Context *context)
+	TOP_Context* myContext;
+	
+	CustomTOP(const OP_NodeInfo *info, TOP_Context* context)
+		: myContext(context)
 	{}
 
 	virtual ~CustomTOP()
@@ -18,28 +23,31 @@ public:
 
 	void getGeneralInfo(TOP_GeneralInfo* ginfo, const OP_Inputs*, void *reserved1) override
 	{
-		ginfo->memPixelType = OP_CPUMemPixelType::RGBA8Fixed;
+		ginfo->cookEveryFrameIfAsked = true;
 	}
 
-	bool getOutputFormat(TOP_OutputFormat* format, const OP_Inputs*, void* reserved1) override
+	void execute(TOP_Output* output, const OP_Inputs* inputs, void* reserved1) override
 	{
-		return false;
-	}
+		TOP_UploadInfo info;
+		info.textureDesc.texDim = OP_TexDim::e2D;
+		info.textureDesc.width = 256;
+		info.textureDesc.height = 256;
+		info.textureDesc.pixelFormat = OP_PixelFormat::BGRA8Fixed;
+		info.colorBufferIndex = 0;
 
-	void execute(TOP_OutputFormatSpecs* outputFormat, const OP_Inputs* inputs, TOP_Context *context, void* reserved1) override
-	{
-		int textureMemoryLocation = 0;
+		size_t byteSize = info.textureDesc.width * info.textureDesc.height * 4 * sizeof(uint8_t);
+		OP_SmartRef<TOP_Buffer> buf = myContext->createOutputBuffer(byteSize, TOP_BufferFlags::None, nullptr);
 
-		uint8_t* mem = (uint8_t*)outputFormat->cpuPixelData[textureMemoryLocation];
+		uint8_t* mem = (uint8_t*)buf->data;
 
-		for (int y = 0; y < outputFormat->height; y++)
+		for (int y = 0; y < info.textureDesc.height; y++)
 		{
-			uint8_t* pixel = mem + outputFormat->width * y * 4;
-			float v = (float)y / (outputFormat->height - 1);
+			uint8_t* pixel = mem + info.textureDesc.width * y * 4;
+			float v = (float)y / (info.textureDesc.height - 1);
 
-			for (int x = 0; x < outputFormat->width; x++)
+			for (int x = 0; x < info.textureDesc.width; x++)
 			{
-				float u = (float)x / (outputFormat->width - 1);
+				float u = (float)x / (info.textureDesc.width - 1);
 
 				pixel[0] = u * 255;
 				pixel[1] = v * 255;
@@ -50,7 +58,7 @@ public:
 			}
 		}
 
-		outputFormat->newCPUPixelDataLocation = textureMemoryLocation;
+		output->uploadBuffer(&buf, info, nullptr);
 	}
 
 };
@@ -65,7 +73,7 @@ extern "C"
 		info->apiVersion = TOPCPlusPlusAPIVersion;
 
 		// Change this to change the executeMode behavior of this plugin.
-		info->executeMode = TOP_ExecuteMode::CPUMemWriteOnly;
+		info->executeMode = TOP_ExecuteMode::CPUMem;
 
 		// The opType is the unique name for this TOP. It must start with a 
 		// capital A-Z character, and all the following characters must lower case
@@ -87,15 +95,13 @@ extern "C"
 		info->customOPInfo.maxInputs = 1;
 	}
 
-	DLLEXPORT TOP_CPlusPlusBase* CreateTOPInstance(const OP_NodeInfo* info, TOP_Context *context)
+	DLLEXPORT TOP_CPlusPlusBase* CreateTOPInstance(const OP_NodeInfo* info, TOP_Context* context)
 	{
 		return new CustomTOP(info, context);
 	}
 
 	DLLEXPORT void DestroyTOPInstance(TOP_CPlusPlusBase* instance, TOP_Context *context)
 	{
-		//context->beginGLCommands();
 		delete (CustomTOP*)instance;
-		//context->endGLCommands();
 	}
 };
