@@ -1,3 +1,3 @@
-// Stub file for simpler CPU Memory TOP usage than an OpenGLTOP
+// Stub file for simpler CHOP usage than an OpenGLTOP
 
 #include <gl/gl.h>

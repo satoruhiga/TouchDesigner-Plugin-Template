@@ -68,6 +68,15 @@ public:
 	int32_t			reserved2[20];
 };
 
+enum class SOP_Winding : int32_t
+{
+	// Clockwise vertex winding. Don't use, for legacy plugins.
+	LegacyCW = 0,
+
+	// Counter-clockwise vertex winding. All new plugins should work this way.
+	CCW,
+};
+
 class SOP_GeneralInfo
 {
 public:
@@ -106,8 +115,13 @@ public:
 	bool	directToGPU;
 
 
+	// Legacy code used clockwise vertex winding, but counter-clockwise is more consistent
+	// with TouchDesigner. Older plugins will have this set to LegacyCW,
+	// but newer ones should set it to CCW, as the sample code does.
+	SOP_Winding			winding;
+
 private:
-	int32_t	reserved[20];
+	int32_t	reserved[19];
 };
 
 
@@ -536,6 +550,7 @@ static_assert(sizeof(SOP_PluginInfo) == 944, "Incorrect Size");
 static_assert(offsetof(SOP_GeneralInfo, cookEveryFrame) == 0, "Incorrect Alignment");
 static_assert(offsetof(SOP_GeneralInfo, cookEveryFrameIfAsked) == 1, "Incorrect Alignment");
 static_assert(offsetof(SOP_GeneralInfo, directToGPU) == 2, "Incorrect Alignment");
+static_assert(offsetof(SOP_GeneralInfo, winding) == 4, "Incorrect Alignment");
 static_assert(sizeof(SOP_GeneralInfo) == 84, "Incorrect Size");
 
 };	// namespace TD
