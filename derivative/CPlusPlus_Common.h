@@ -378,12 +378,14 @@ public:
 	// The python documentation string for the class
 	const char*		pythonDoc = nullptr;
 
-	// If you want this node to have a Callback DAT parameter and feature that allows
-	// your custom OP to call python callbacks the end-users fill in
+	// If you want this node to have a Callback DAT parameter and
+	// your custom OP to be able call python callbacks the end-users fill in,
 	// then fill in the stub code for the DAT here.
-	// This will cause a Callbacks DAT parameter to be added to the first page of your node's parameters.
-	// This should be setup with empty/stub functions along with comments, similar to the way other
-	// Callback DATs are pre-filled in other nodes in TouchDesigner.
+	// This will cause a Callbacks DAT parameter to be added to the first page of
+	// your node's parameters.
+	// This should be setup with empty/stub functions along with comments, 
+	// similar to the way other Callback DATs are pre-filled in other nodes in TouchDesigner.
+	// Note: This only works when the .dll is installed as a Custom OP, not as a C++ OP.
 	const char*		pythonCallbacksDAT = nullptr;
 
 	int32_t			reserved[88];

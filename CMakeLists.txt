@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
+set(TOUCHDESIGNER_EXE "C:/Program Files/Derivative/TouchDesigner/bin/TouchDesigner.exe" CACHE FILEPATH "TouchDesigner.exe Path")
+
 ###
 
 project(CustomOps)
@@ -39,8 +41,6 @@ function(BuiltCustomOp OPNAME SRC LIBRARIES)
 
     add_library(${OPNAME} MODULE ${SRC} ${DEP_SRC})
 
-    target_link_libraries(${OPNAME} ${LIBRARIES})
-
     set_target_properties(${OPNAME} PROPERTIES LINKER_LANGUAGE CXX)
     set_target_properties(${OPNAME} PROPERTIES PREFIX "")
     set_target_properties(${OPNAME} PROPERTIES BUNDLE TRUE)
@@ -48,10 +48,13 @@ function(BuiltCustomOp OPNAME SRC LIBRARIES)
     find_package(OpenGL REQUIRED)
     target_link_libraries(${OPNAME} ${OPENGL_LIBRARY} ${LINK_LIBRARIES})
 
-    set_target_properties(${OPNAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/out)
-    set_target_properties(${OPNAME} PROPERTIES VS_DEBUGGER_COMMAND "C:/Program Files/Derivative/TouchDesigner/bin/TouchDesigner.exe")
-    set_target_properties(${OPNAME} PROPERTIES VS_DEBUGGER_ENVIRONMENT "TOUCH_TEXT_CONSOLE=1")
-    set_target_properties(${OPNAME} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "test.toe")
+    set(OPTEST ${OPNAME}_TEST)
+    add_custom_target(${OPTEST})
+
+    set_target_properties(${OPTEST} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/out)
+    set_target_properties(${OPTEST} PROPERTIES VS_DEBUGGER_COMMAND ${TOUCHDESIGNER_EXE})
+    set_target_properties(${OPTEST} PROPERTIES VS_DEBUGGER_ENVIRONMENT "TOUCH_TEXT_CONSOLE=1")
+    set_target_properties(${OPTEST} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "test.toe")
 
     ### hot-reloading using OSC message (`oscer` https://github.com/aike/oscer)
 
@@ -61,8 +64,8 @@ function(BuiltCustomOp OPNAME SRC LIBRARIES)
         set(OSCER "${CMAKE_CURRENT_SOURCE_DIR}/bin/Windows64/oscer.exe")
     endif()
 
-    add_custom_command(TARGET ${OPNAME} PRE_BUILD COMMAND ${OSCER} ARGS localhost 23423 /unload)
-    add_custom_command(TARGET ${OPNAME} POST_BUILD COMMAND ${OSCER} ARGS localhost 23423 /load)
+    add_custom_command(TARGET ${OPTEST} PRE_BUILD COMMAND ${OSCER} ARGS localhost 23423 /unload)
+    add_custom_command(TARGET ${OPTEST} POST_BUILD COMMAND ${OSCER} ARGS localhost 23423 /load)
 
 endfunction(BuiltCustomOp)
 
