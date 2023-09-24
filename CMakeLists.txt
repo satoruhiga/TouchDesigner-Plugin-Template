@@ -37,7 +37,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${OUTPUT_DIRECTORY})
 
 ###
 
-function(BuiltCustomOp OPNAME SRC LIBRARIES)
+function(BuiltCustomOp OPNAME SRC LINK_LIBRARIES)
 
     add_library(${OPNAME} MODULE ${SRC} ${DEP_SRC})
 
