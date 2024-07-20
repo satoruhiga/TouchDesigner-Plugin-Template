@@ -27,10 +27,8 @@ stays the same, otherwise changes won't be backwards compatible
 	#define NOMINMAX
 	#include <windows.h>
 	#include <stdint.h>
-	#include "GL_Extensions.h"
 	#define DLLEXPORT __declspec (dllexport)
 #else
-	#include <OpenGL/gltypes.h>
 	#define DLLEXPORT
 #endif
 
@@ -55,8 +53,6 @@ class TOP_CPlusPlus;
 
 namespace TD
 {
-
-//class OP_NodeInfo;
 
 class CHOP_PluginInfo;
 class CHOP_CPlusPlusBase;
@@ -104,10 +100,6 @@ enum class OP_PixelFormat : int32_t
 	MonoA16Fixed,
 	MonoA16Float,
 	MonoA32Float,
-
-	// RGBX, Alpha channel is ignored, will be treated a 1.0 for operations.
-	RGBX16Float = 500,
-	RGBX32Float,
 
 	// sRGB. use SBGRA if possible since that's what most GPUs use
 	SBGRA8Fixed = 600,
@@ -391,6 +383,37 @@ public:
 	int32_t			reserved[88];
 };
 
+// This class is used to provide direct access to the instance of a Custom OP
+// by another Custom OP who has a reference to it, via it's input or a parameter.
+// The type of 'T' will be TOP_CPlusPlusBase, CHOP_CPlusPlusBase etc. depending
+// on the OP family. Use the 'opType' field to verify that this node is the
+// type you expect it to be, before casting 'instance' to your real class that
+// implements the custom OP.
+// Since the header of the Custom OP is needed to do the cast, this is only
+// useful in cases where you are implementing multiple Custom OPs, and need a
+// higher level of communication between them than parameters/inputs etc.
+// The customOP field will be nullptr in the OP_TOPInput, OP_CHOPInput etc
+// if the node is not a Custom OP.
+//
+// Does not work with plugins loaded directly into the CPlusPlus nodes.
+template <class T>
+class OP_CustomOPInstance
+{
+public:
+	OP_CustomOPInstance()
+	{
+		instance = nullptr;
+		opType = nullptr;
+		memset(reserved, 0, sizeof(reserved));
+	}
+
+	T*				instance;
+	const char*		opType;
+	int32_t			minorVersion;
+	int32_t			majorVersion;
+
+	int32_t			reserved[50];
+};
 
 class OP_Context
 {
@@ -473,7 +496,19 @@ public:
 	// Used to do other operations to the node such as call python callbacks
 	OP_Context*		context;
 
-	int32_t			reserved[15];
+	// The number of times this node has cooked. Incremented at the start of the cook.
+	uint32_t		cookCount;
+
+#ifdef _WIN32
+	// The HINSTANCE of the process executable
+	HINSTANCE		processHInstance;
+#endif
+
+#ifdef _WIN32
+	int32_t			reserved[12];
+#else
+	int32_t			reserved[14];
+#endif
 };
 
 class OP_DATInput
@@ -501,7 +536,10 @@ public:
 	// The number of times this node has cooked
 	int64_t			totalCooks;
 
-	int32_t			reserved[18];
+	// See documentation for OPCustomOPInstance
+	const OP_CustomOPInstance<DAT_CPlusPlusBase>* customOP;
+
+	int32_t			reserved[16];
 };
 
 class OP_TOPInputDownloadOptions
@@ -631,7 +669,11 @@ public:
 	// The number of times this node has cooked
 	int64_t			totalCooks;
 
-	int32_t			reserved[14];
+	// See documentation for OPCustomOPInstance
+	const OP_CustomOPInstance<TOP_CPlusPlusBase>* customOP;
+
+	int32_t			reserved[12];
+
 protected:
 	virtual void*	reserved0() = 0;
 	virtual void*	reserved1() = 0;
@@ -696,7 +738,11 @@ public:
 
 	// The number of times this node has cooked
 	int64_t			totalCooks;
-	int32_t			reserved[18];
+
+	// See documentation for OPCustomOPInstance
+	const OP_CustomOPInstance<CHOP_CPlusPlusBase>* customOP;
+
+	int32_t			reserved[16];
 };
 
 class OP_ObjectInput
@@ -1222,9 +1268,8 @@ public:
 		intData = nullptr;
 	}
 
-	const float*		floatData;
-	const int32_t*		intData;
-
+	float*			floatData;
+	int32_t*		intData;
 };
 
 // SOP_PrimitiveInfo, all the required data for each primitive
@@ -1343,7 +1388,10 @@ public:
 	// The number of times this node has cooked
 	int64_t			totalCooks;
 
-	int32_t			reserved[97];
+	// See documentation for OPCustomOPInstance
+	const OP_CustomOPInstance<SOP_CPlusPlusBase>* customOP;
+
+	int32_t			reserved[95];
 };
 
 class OP_TimeInfo
@@ -1614,11 +1662,28 @@ enum class OP_ParAppendResult : int32_t
 	InvalidSize,	// size out of range
 };
 
+class OP_BuildDynamicMenuInfo
+{
+public:
+	// A pointer to your plugin instance, cast this to your class type
+	void*		instance;
+
+	// The name of the parameter being dynamically filled
+	const char* name;
+
+	int			reserved[20];
+
+	// Call this to add menu entries for your dynamic menu.
+	// The contents of the strings are copied during the call, you don't need to keep copies around
+	// after the call returns.
+	virtual bool	addMenuEntry(const char* name, const char* label) = 0;
+};
+
 class OP_ParameterManager
 {
 
 public:
-	// Returns PARAMETER_APPEND_SUCCESS on succesful
+	// Returns OP_ParAppendResult::Success on success
 	virtual OP_ParAppendResult		appendFloat(const OP_NumericParameter &np, int32_t size = 1) = 0;
 	virtual OP_ParAppendResult		appendInt(const OP_NumericParameter &np, int32_t size = 1) = 0;
 
@@ -1671,6 +1736,11 @@ public:
 	virtual OP_ParAppendResult		appendHeader(const OP_StringParameter &np) = 0;
 	virtual OP_ParAppendResult		appendMomentary(const OP_NumericParameter &np) = 0;
 	virtual OP_ParAppendResult		appendWH(const OP_NumericParameter &np) = 0;
+
+	// The buildDynamicMenu() function will be called in your class instance when required, allowing you to
+	// fill the menu with custom entries based on other parameters or external state (such as available devices).
+	virtual OP_ParAppendResult		appendDynamicStringMenu(const OP_StringParameter &sp) = 0;
+	virtual OP_ParAppendResult		appendDynamicMenu(const OP_StringParameter &sp) = 0;
 
 };
 

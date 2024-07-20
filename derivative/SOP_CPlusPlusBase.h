@@ -373,8 +373,10 @@ public:
 	// Length of the returned array is numIndices.
 	virtual int32_t*	addLines(int32_t numIndices) = 0;
 
-	// Returns SOP_CustomAttribData which has the start of the array for the custom attributes by its name.
-	// Returns false is case of null arguments.
+	// Fills SOP_CustomAttribData with data for the given attribute 'name'.
+	// The intData or floatData member contains a pointer to the member that should
+	// be filled.
+	// Returns false is case of null arguments, or invalid name.
 	virtual bool		getCustomAttribute(SOP_CustomAttribData* cu, const char* name) = 0;
 
 	// Finish updating the VBO buffers.
@@ -512,6 +514,13 @@ public:
 	// This is called whenever a pulse parameter is pressed
 	virtual void
 	pulsePressed(const char* name, void* reserved1)
+	{
+	}
+
+	// This is called whenever a dynamic menu type custom parameter needs to have it's content's
+	// updated. It may happen often, so this could should be efficient.
+	virtual void
+	buildDynamicMenu(const OP_Inputs* inputs, OP_BuildDynamicMenuInfo* info, void* reserved1)
 	{
 	}
 
